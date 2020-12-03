@@ -56,7 +56,7 @@ class yahoo_dataset(TODS_dataset):
 
     training_file = 'learningData.csv'
     testing_file = 'testingData.csv'
-    ground_truth_index = 3
+    ground_truth_index = 7
     _repr_indent = 4
 
     # def __init__(self, root, train, transform=None, target_transform=None, download=True):
