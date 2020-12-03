@@ -56,7 +56,6 @@ class TODS_dataset:
             return
 
         os.makedirs(self.raw_folder, exist_ok=True)
-        os.makedirs(self.processed_folder, exist_ok=True)
 
         # download files
         for url, md5 in self.resources:
