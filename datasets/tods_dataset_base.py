@@ -7,7 +7,7 @@ import string
 import gzip
 import lzma
 from typing import Any, Callable, Dict, IO, List, Optional, Tuple, Union
-from utils import download_url, download_and_extract_archive, extract_archive, verify_str_arg
+from dataset_utils import download_url, download_and_extract_archive, extract_archive, verify_str_arg
 
 # tqdm >= 4.31.1
 
