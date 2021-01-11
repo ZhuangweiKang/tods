@@ -7,6 +7,7 @@ with open('../entry_points/entry_points_feature_analysis.txt','r',encoding='utf-
 
 output_dir = '../primitiveSKI/feature_analysis'
 
+fit_available_primitives = ['TRMFPrimitive', 'SKTruncatedSVDPrimitive']
 
 primitive_folder_start_loc_buf = [i.start()+2 for i in re.finditer('=', entry_file)]
 primitive_start_loc_buf = [i.start()+1 for i in re.finditer(':', entry_file)]
@@ -29,7 +30,11 @@ for primitive_index, primitive_start_loc in enumerate(primitive_start_loc_buf):
     class_name = primitive_name.replace('Primitive', 'SKI')
     class_line1 = 'class ' + class_name + '(BaseSKI):\n\tdef __init__(self, **hyperparams):\n\t\tsuper().__init__(primitive='
     class_line2 = primitive_name + ', **hyperparams)\n'
-    class_line3 = '\t\tself.fit_available = False\n\t\tself.predict_available = False\n\t\tself.produce_available = True\n'
+
+    if primitive_name in fit_available_primitives:
+        class_line3 = '\t\tself.fit_available = True\n\t\tself.predict_available = False\n\t\tself.produce_available = True\n'
+    else:
+        class_line3 = '\t\tself.fit_available = False\n\t\tself.predict_available = False\n\t\tself.produce_available = True\n'
 
     python_content = import_line1 + import_line2 + class_line1 + class_line2 + class_line3
     python_name = primitive_name.replace('Primitive', '_skinterface.py')

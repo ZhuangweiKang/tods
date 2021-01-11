@@ -9,6 +9,7 @@ dataset_array = pd.read_csv(os.path.join(cpath, '../../../../datasets/NAB/realTw
 X_test = dataset_array[:, [1]]
 
 transformer = StatisticalAbsEnergySKI()
+
 X_transform = transformer.produce(X_test)
 
 print("Primitive:", transformer.primitive)

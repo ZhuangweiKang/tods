@@ -9,6 +9,7 @@ with open('../entry_points/entry_points_feature_analysis.txt','r',encoding='utf-
 
 output_dir = '../test/feature_analysis'   #output directory
 
+fit_available_primitives = ['TRMFPrimitive', 'SKTruncatedSVDPrimitive']
 
 primitive_folder_start_loc_buf = [i.start()+2 for i in re.finditer('=', entry_file)]
 primitive_start_loc_buf = [i.start()+1 for i in re.finditer(':', entry_file)]
@@ -39,15 +40,20 @@ dataset_array = pd.read_csv(os.path.join(cpath, '../../../../datasets/NAB/realTw
 X_test = dataset_array[:, [1]]\n
 """
 
-    main_line2 = 'transformer = ' + class_name + '()'
-    main_line3 = """
+    main_line2 = 'transformer = ' + class_name + '()\n'
+    if primitive_name in fit_available_primitives:
+        main_line3 = 'transformer.fit(X_train)'
+    else:
+        main_line3 = ''
+
+    main_line4 = """
 X_transform = transformer.produce(X_test)
 
 print("Primitive:", transformer.primitive)
 print("X_transform:\\n", X_transform)
 """
 
-    python_content = import_line1 + import_line2 + main_line1+main_line2+main_line3
+    python_content = import_line1 + import_line2 + main_line1+main_line2+main_line3+main_line4
     python_name = primitive_name.replace('Primitive', '_skitest.py')
     
     with open(os.path.join(output_dir, python_name), 'w', encoding='utf-8') as f:
