@@ -21,7 +21,7 @@ from d3m.exceptions import PrimitiveNotFittedError
 from d3m.primitive_interfaces.base import CallResult, DockerContainer
 
 
-__all__ = ('SubsequenceClustering',)
+__all__ = ('SubsequenceSegmentation',)
 
 Inputs = container.DataFrame
 Outputs = container.DataFrame
@@ -118,9 +118,9 @@ class Hyperparams(hyperparams.Hyperparams):
     )
 
     
-class SubsequenceClustering(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
+class SubsequenceSegmentation(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
     """
-    Subsequence Time Seires Clustering.
+    Subsequence Time Seires Segmentation.
 
     Parameters
     ----------
@@ -168,11 +168,11 @@ class SubsequenceClustering(transformer.TransformerPrimitiveBase[Inputs, Outputs
 
     __author__: "DATA Lab at Texas A&M University"
     metadata = metadata_base.PrimitiveMetadata({ 
-         "name": "Subsequence Clustering Primitive",
-         "python_path": "d3m.primitives.tods.timeseries_processing.subsequence_clustering",
+         "name": "Subsequence Segmentation Primitive",
+         "python_path": "d3m.primitives.tods.timeseries_processing.subsequence_segmentation",
          "source": {'name': 'DATA Lab at Texas A&M University', 'contact': 'mailto:khlai037@tamu.edu', 
          'uris': ['https://gitlab.com/lhenry15/tods.git', ]},
-         "algorithm_types": [metadata_base.PrimitiveAlgorithmType.BK_FILTER,],
+         "algorithm_types": [metadata_base.PrimitiveAlgorithmType.SUBSEQUENCE_SEGMENTATION,],
          "primitive_family": metadata_base.PrimitiveFamily.DATA_PREPROCESSING,
          "id": "cf0bd4c1-9e09-4471-a2a3-6956deed17ac",
          "hyperparams_to_tune": ['window_size', 'step', 'flatten_order'],
