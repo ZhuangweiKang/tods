@@ -1,12 +1,8 @@
 from d3m import container
-from tods.detection_algorithm import DeepLog
-from tods.detection_algorithm.PyodABOD import ABODPrimitive
-from tods.detection_algorithm.PyodAE import AutoEncoderPrimitive
-from tods.detection_algorithm.PyodSOD import SODPrimitive
-from tods.detection_algorithm.AutoRegODetect import AutoRegODetectorPrimitive
+import numpy as np
 
 class BaseSKI():
-    def __init__(self, primitive, **hyperparameter):
+    def __init__(self, primitive, system_num=1, **hyperparameter):
 
         hyperparam_buf = list(primitive.metadata.get_hyperparams().defaults().keys())
         hyperparam_input = list(hyperparameter.keys())
@@ -20,83 +16,121 @@ class BaseSKI():
         if len(hyperparameter.items())!=0:
             #for key, value in hyperparameter.items():
             hyperparams = hyperparams.replace(hyperparameter)
-            
-        self.primitive = primitive(hyperparams=hyperparams)
-        self.fit_available = False
-        self.predict_available = False
-        self.produce_available = False
+
+        # bugs!
+        self.fit_available = True if 'fit' in primitive.__dict__ else False
+        self.predict_available = True if 'produce' in primitive.__dict__ else False
+        self.predict_score_available = True if 'produce_score' in dir(primitive) else False
+        self.produce_available = True if 'produce' in primitive.__dict__ else False
+
+        # print(primitive, self.fit_available, self.predict_available, self.predict_score_available, self.produce_available)
+
+        self.system_num = system_num
+        if system_num >= 1:
+            self.primitives = [primitive(hyperparams=hyperparams) for sys_idx in range(system_num)]
+        else:
+            raise AttributeError('BaseSKI must have positive system_num.')
+
+
         #print(hyperparams)
-
-    def transform(self, X):     #transform the ndarray to d3m dataframe, select columns to use
-        column_name = [str(col_index) for col_index in range(X.shape[1])]
-        return container.DataFrame(X, columns=column_name, generate_metadata=True)
-
-        # use_columns = [iter for iter in range(len(X))]
-        # inputs = {}
-        # for i in use_columns:
-        #   inputs['col_'+str(i)] = list(X[i])
-        # inputs = container.DataFrame(inputs, columns=list(inputs.keys()), generate_metadata=True)
-        # return inputs
-
-    def set_training_data(self, data):
-        return self.primitive.set_training_data(inputs=data)
 
     def fit(self, data):
 
         if not self.fit_available:
             raise AttributeError('type object ' + self.__class__.__name__ + ' has no attribute \'fit\'')
 
-        data = self.transform(data)
-        self.set_training_data(data)
-        return self.primitive.fit()
+        data = self._sys_data_check(data)
+
+        for sys_idx, primitive in enumerate(self.primitives):
+            sys_data = data[sys_idx]
+            sys_data = self._transform(sys_data)
+            primitive.set_training_data(inputs=sys_data)
+            primitive.fit()
+
+        return
     
     def predict(self, data):
 
         if not self.predict_available:
             raise AttributeError('type object ' + self.__class__.__name__ + ' has no attribute \'predict\'')
 
-        data = self.transform(data)
-        return self.primitive.produce(inputs=data).value.values
+        data = self._sys_data_check(data)
+        output_data = self._forward(data, 'produce')
+
+        return output_data
     
     def predict_score(self, data):
 
         if not self.predict_available:
             raise AttributeError('type object ' + self.__class__.__name__ + ' has no attribute \'predict_score\'')
 
-        data = self.transform(data)
-        return self.primitive.produce_score(inputs=data).value.values
+        data = self._sys_data_check(data)
+        output_data = self._forward(data, 'produce_score')
+
+        return output_data
 
     def produce(self, data):    #produce function for other primitive types
 
         if not self.produce_available:
             raise AttributeError('type object ' + self.__class__.__name__ + ' has no attribute \'produce\'')
 
-        data = self.transform(data)
-        return self.primitive.produce(inputs=data).value.values
-"""
-if __name__ == '__main__':
-    import numpy as np
-    X_train = np.array([[3., 4., 8., 16, 18, 13., 22., 36., 59., 128, 62, 67, 78, 100]])
-    X_test = np.array([[3., 4., 8.6, 13.4, 22.5, 17, 19.2, 36.1, 127, -23, 59.2]])
-    transformer = SKInterface(AutoRegODetectorPrimitive, contamination=0.2, window_size=2)
-    transformer.fit(X_train)
-    prediction_labels = transformer.produce(X_test)
-    prediction_score = transformer.produce_score(X_test)
-    print("Prediction Labels\n", prediction_labels)
-    print("Prediction Score\n", prediction_score)
-"""
+        data = self._sys_data_check(data)
+        output_data = self._forward(data, 'produce')
 
-"""
-  def transform(self, X):
-    inputs = {}
-    for i in range(len(X)):
-      inputs['col_'+str(i)] = list(X[i])
-    inputs = container.DataFrame(inputs, columns=list(inputs.keys()), generate_metadata=True)
-    outputs = self.primitive.produce(inputs=inputs).value.to_numpy()
-    return outputs
+        return output_data
 
-    'contamination': contamination,
-          'use_columns': use_columns,
-          'return_result': return_result,
-"""
-#use_columns=(-1,), contamination=0.1, return_result='append'
+    def _sys_data_check(self, data):
+
+        if self.system_num == 1:
+            if type(data) is np.ndarray and data.ndim == 2:
+                data = [data] # np.expand_dims(data, axis=0)
+            else:
+                raise AttributeError('For system_num = 1, input data should be 2D numpy array.')
+        elif self.system_num > 1:
+            if type(data) is list and len(data) == self.system_num:
+                for ts_data in data:
+                    if type(ts_data) is np.ndarray and ts_data.ndim == 2:
+                        continue
+                    else:
+                        raise AttributeError('For system_num > 1, each element of input list should be 2D numpy arrays.')
+
+            else:
+                raise AttributeError('For system_num > 1, input data should be the list of `system_num` 2D numpy arrays.')
+
+            # if len(data.shape) != 3:
+            #     raise AttributeError('For system_num > 1, input data should have 3 dimensions.')
+            # elif self.system_num != data.shape[0]:
+            #     raise AttributeError('For system_num > 1, data.shape[0] must equal system_num.')
+
+        return data
+
+    def _forward(self, data, method):
+        output_data = []
+        for sys_idx, primitive in enumerate(self.primitives):
+            sys_data = data[sys_idx]
+            sys_data = self._transform(sys_data)
+            forward_method = getattr(primitive, method, None)
+            output_data.append(forward_method(inputs=sys_data).value.values)
+            # print(forward_method(inputs=sys_data).value.values.shape)
+
+        # print(type(output_data), len(output_data), output_data[0].shape)
+        # print(np.array(output_data))
+
+        if self.system_num == 1:
+            output_data = output_data[0]
+
+        # print(np.array(output_data))
+
+        return output_data
+
+        # output_data = np.array(output_data)
+        # if self.system_num == 1:
+        #     output_data = output_data.squeeze(axis=0)
+
+
+    def _transform(self, X):     #transform the ndarray to d3m dataframe, select columns to use
+        column_name = [str(col_index) for col_index in range(X.shape[1])]
+        return container.DataFrame(X, columns=column_name, generate_metadata=True)
+
+    # def set_training_data(self, data):
+    #     return self.primitive.set_training_data(inputs=data)
