@@ -1,23 +1,27 @@
 from d3m import container
 import numpy as np
 
-class BaseSKI():
+def get_default_hyperparameter(primitive, hyperparameter):
+
+    # check if input legal hyperparameter
+    hyperparam_buf = list(primitive.metadata.get_hyperparams().defaults().keys())
+    hyperparam_input = list(hyperparameter.keys())
+    if not set(hyperparam_buf) > set(hyperparam_input):
+        invalid_hyperparam = list(set(hyperparam_input) - set(hyperparam_buf))
+        raise TypeError(primitive.__name__ + ' got unexpected keyword argument ' + str(invalid_hyperparam))
+
+    hyperparams_class = primitive.metadata.get_hyperparams()
+    hyperparams = hyperparams_class.defaults()
+    # print("items ", type(hyperparameter.items()))
+    if len(hyperparameter.items()) != 0:
+        # for key, value in hyperparameter.items():
+        hyperparams = hyperparams.replace(hyperparameter)
+
+    return hyperparams
+
+class BaseSKI:
     def __init__(self, primitive, system_num=1, **hyperparameter):
 
-        hyperparam_buf = list(primitive.metadata.get_hyperparams().defaults().keys())
-        hyperparam_input = list(hyperparameter.keys())
-        if not set(hyperparam_buf) > set(hyperparam_input):
-            invalid_hyperparam = list(set(hyperparam_input) - set(hyperparam_buf))
-            raise TypeError(self.__class__.__name__ + ' got unexpected keyword argument ' + str(invalid_hyperparam))
-
-        hyperparams_class = primitive.metadata.get_hyperparams()
-        hyperparams = hyperparams_class.defaults()
-        #print("items ", type(hyperparameter.items()))
-        if len(hyperparameter.items())!=0:
-            #for key, value in hyperparameter.items():
-            hyperparams = hyperparams.replace(hyperparameter)
-
-        # bugs!
         self.fit_available = True if 'fit' in primitive.__dict__ else False
         self.predict_available = True if 'produce' in primitive.__dict__ else False
         self.predict_score_available = True if 'produce_score' in dir(primitive) else False
@@ -26,6 +30,8 @@ class BaseSKI():
         # print(primitive, self.fit_available, self.predict_available, self.predict_score_available, self.produce_available)
 
         self.system_num = system_num
+        hyperparams = get_default_hyperparameter(primitive, hyperparameter)
+
         if system_num >= 1:
             self.primitives = [primitive(hyperparams=hyperparams) for sys_idx in range(system_num)]
         else:

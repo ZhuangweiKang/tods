@@ -106,6 +106,29 @@ def generate_3D_data(n_sys=1, n_train=1000, n_test=500, n_features=2, contaminat
 
 def load_sys_data(sys_dir, data_dir):
 
+    """Utility function to load system feature.
+
+    Parameters
+    ----------
+    data_dir: string
+        directory of system description
+
+    data_dir: string
+        directory of system feature
+
+    Returns
+    -------
+    X : list
+        system features
+
+    Y: numpy array of shape (n_sys, 1),
+        groundtruth, 1 marks abnormal system
+
+    sys_info: dictionary
+        system number, time-series length and dimention number
+
+    """
+
     sys_buf = pd.read_csv(sys_dir)
 
     X_csv_name = sys_buf['system'].values
@@ -134,13 +157,30 @@ def load_sys_data(sys_dir, data_dir):
 
 def generate_sys_feature(sys_feature: list):
 
-    ts_len = np.array([ts.shape[0] for ts in sys_feature]).min()
-    ndim = np.array([ts.shape[1] for ts in sys_feature]).min()
-    sys_feature = [ts[:ts_len, :ndim].T.reshape((ts_len*ndim, 1)) for ts in sys_feature]
+    """Utility function to generate system feature.
 
-    sys_feature_array = np.concatenate(sys_feature, axis=1)
-    return sys_feature_array
+    Parameters
+    ----------
+    sys_feature : list
+        each element of the sys_feature is feature of each system
 
+    Returns
+    -------
+    sys_feature_array_with_id : numpy array of shape (n, 2),
+        the first column is system id, second column is its feature, n = feature number * system number.
+
+    """
+
+    # ts_len = np.array([ts.shape[0] for ts in sys_feature]).min()
+    # ndim = np.array([ts.shape[1] for ts in sys_feature]).min()
+    # sys_feature = [ts[:ts_len, :ndim].T.reshape((ts_len*ndim, 1)) for ts in sys_feature]
+
+    sys_id = np.concatenate([idx*np.ones((len(sys_feature[idx]),1)).astype(np.int)
+                             for idx in range(len(sys_feature))], axis=0)
+    sys_feature_array = np.concatenate(sys_feature, axis=0)
+    sys_feature_array_with_id = np.concatenate((sys_id, sys_feature_array), axis=1)
+
+    return sys_feature_array_with_id
 
 
 # load_sys_data('/Users/didi/Documents/hegsns/hegsns/TODS/tods_Guanchu/tods/datasets/anomaly/system_wise/sample/train.csv',
