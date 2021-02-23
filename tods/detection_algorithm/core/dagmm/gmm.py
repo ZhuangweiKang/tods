@@ -54,6 +54,7 @@ class GMM:
             self.L = tf.cholesky(sigma + min_vals[None,:,:])
 
         self.training = False
+        return self
 
     def fix_op(self):
         """ return operator to fix paramters of GMM

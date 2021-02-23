@@ -1,12 +1,4 @@
 from typing import Any, Callable, List, Dict, Union, Optional, Sequence, Tuple
-from numpy import ndarray
-from collections import OrderedDict
-from scipy import sparse
-import os
-import sklearn
-import numpy
-import typing
-
 
 
 
@@ -50,19 +42,19 @@ class Hyperparams(Hyperparams_ODBase):
         semantic_types=['https://metadata.datadrivendiscovery.org/types/TuningParameter']
     )
     est_dropout_ratio = hyperparams.Hyperparameter[float](
-        default=0.5,
+        default=0.25,
         semantic_types=['https://metadata.datadrivendiscovery.org/types/ControlParameter'],
         description="Dropout rate of estimation network"
     )
 
     minibatch_size = hyperparams.Hyperparameter[int](
-        default=32,
+        default=3,
         semantic_types=['https://metadata.datadrivendiscovery.org/types/ControlParameter'],
         description="Mini Batch size"
     )
 
     epoch_size = hyperparams.Hyperparameter[int](
-        default=10,
+        default=100,
         semantic_types=['https://metadata.datadrivendiscovery.org/types/ControlParameter'],
         description="Epoch"
     )
@@ -168,6 +160,7 @@ class DAGMMPrimitive(UnsupervisedOutlierDetectorBase[Inputs, Outputs, Params, Hy
         Returns:
             None
         """
+
         return super().fit()
 
     def produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> CallResult[Outputs]:

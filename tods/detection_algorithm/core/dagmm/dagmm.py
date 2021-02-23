@@ -6,6 +6,7 @@ from sklearn.externals import joblib
 from  .compression_net import CompressionNet
 from .estimation_net import EstimationNet
 from .gmm import GMM
+from pyod.utils.stat_models import pairwise_distances_no_broadcast
 
 from os import makedirs
 from os.path import exists, join
@@ -102,6 +103,7 @@ class DAGMM(BaseDetector):
         X : array-like, shape (n_samples, n_features)
             Training data.
         """
+
         n_samples, n_features = X.shape
 
         if self.normalize:
@@ -155,8 +157,7 @@ class DAGMM(BaseDetector):
 
                     self.sess.run(minimizer, feed_dict={
                         input:x_batch, drop:self.est_dropout_ratio})
-
-                if (epoch + 1) % 100 == 0:
+                if (epoch + 1) % 10 == 0:
                     loss_val = self.sess.run(loss, feed_dict={input:X, drop:0})
                     print(" epoch {}/{} : loss = {:.3f}".format(epoch + 1, self.epoch_size, loss_val))
 
@@ -169,6 +170,11 @@ class DAGMM(BaseDetector):
             tf.add_to_collection("save", self.energy)
 
             self.saver = tf.train.Saver()
+
+            pred_scores = self.decision_function(X)
+            self.decision_scores_ = pred_scores
+            self._process_decision_scores()
+            return self
 
     def decision_function(self, X):
         """ Calculate anormaly scores (sample energy) on samples in X.
@@ -191,7 +197,8 @@ class DAGMM(BaseDetector):
             X = self.scaler.transform(X)
 
         energies = self.sess.run(self.energy, feed_dict={self.input:X})
-        return energies
+
+        return energies.reshape(1,-1)
 
     def save(self, fdir):
         """ Save trained model to designated directory.
