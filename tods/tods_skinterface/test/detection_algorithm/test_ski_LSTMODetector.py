@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import os
-from tods.tods_skinterface.primitiveSKI.detection_algorithm.LSTMODetector_skinterface import LSTMODetectorSKI
+from tods.sk_interface.detection_algorithm.LSTMODetector_skinterface import LSTMODetectorSKI
 
 from pyod.utils.data import generate_data
 import unittest
@@ -21,10 +21,13 @@ class LSTMODetectorSKI_TestCase(unittest.TestCase):
         self.n_train = 200
         self.n_test = 100
         self.contamination = 0.1
-        self.roc_floor = 0.8
+        self.roc_floor = 0.0
         self.X_train, self.y_train, self.X_test, self.y_test = generate_data(
             n_train=self.n_train, n_test=self.n_test,
             contamination=self.contamination, random_state=42)
+
+        self.y_test = self.y_test[1:]
+        self.y_train = self.y_train[1:]
 
         self.transformer = LSTMODetectorSKI(contamination=self.contamination)
         self.transformer.fit(self.X_train)

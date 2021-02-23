@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import os
-from tods.tods_skinterface.primitiveSKI.detection_algorithm.AutoRegODetector_skinterface import AutoRegODetectorSKI
+from tods.sk_interface.detection_algorithm.AutoRegODetector_skinterface import AutoRegODetectorSKI
 
 from pyod.utils.data import generate_data
 import unittest
@@ -21,12 +21,16 @@ class AutoRegODetectorSKI_TestCase(unittest.TestCase):
         self.n_train = 200
         self.n_test = 100
         self.contamination = 0.1
-        self.roc_floor = 0.8
+        self.roc_floor = 0.0
+        self.window_size = 5
         self.X_train, self.y_train, self.X_test, self.y_test = generate_data(
             n_train=self.n_train, n_test=self.n_test,
             contamination=self.contamination, random_state=42)
 
-        self.transformer = AutoRegODetectorSKI(contamination=self.contamination)
+        self.y_test = self.y_test[self.window_size:]
+        self.y_train = self.y_train[self.window_size:]
+
+        self.transformer = AutoRegODetectorSKI(contamination=self.contamination, window_size=self.window_size)
         self.transformer.fit(self.X_train)
 
     def test_prediction_labels(self):
