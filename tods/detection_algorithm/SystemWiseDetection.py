@@ -38,13 +38,13 @@ class Hyperparams(hyperparams.Hyperparams):
 
        #Tuning Parameter
        #default -1 considers entire time series is considered
-       window_size = hyperparams.Hyperparameter(default=10, semantic_types=[
+       window_size = hyperparams.Hyperparameter(default=2, semantic_types=[
            'https://metadata.datadrivendiscovery.org/types/TuningParameter',
        ], description="Window Size for decomposition")
 
        method_type = hyperparams.Enumeration(
            values=['max', 'avg', 'sliding_window_sum','majority_voting_sliding_window_sum','majority_voting_sliding_window_max'],
-           default='majority_voting_sliding_window_max',
+           default='max',
            semantic_types=['https://metadata.datadrivendiscovery.org/types/ControlParameter'],
            description="The type of method used to find anomalous system",
        )
@@ -164,12 +164,12 @@ class SystemWiseDetectionPrimitive(transformer.TransformerPrimitiveBase[Inputs, 
         if len(self._training_indices) > 0:
             # self._clf.fit(self._training_inputs)
             self._fitted = True
-        else:
+        else: # pragma: no cover
             if self.hyperparams['error_on_no_input']:
                 raise RuntimeError("No input columns were selected")
             self.logger.warn("No input columns were selected")
 
-        if not self._fitted:
+        if not self._fitted: # pragma: no cover
             raise PrimitiveNotFittedError("Primitive not fitted.")
         system_wise_detection_input = inputs
         if self.hyperparams['use_semantic_types']:
@@ -180,7 +180,7 @@ class SystemWiseDetectionPrimitive(transformer.TransformerPrimitiveBase[Inputs, 
             outputs = system_wise_detection_output
 
 
-            if sparse.issparse(system_wise_detection_output):
+            if sparse.issparse(system_wise_detection_output): # pragma: no cover
                 system_wise_detection_output = system_wise_detection_output.toarray()
             outputs = self._wrap_predictions(inputs, system_wise_detection_output)
 
@@ -190,7 +190,7 @@ class SystemWiseDetectionPrimitive(transformer.TransformerPrimitiveBase[Inputs, 
             output_columns = [outputs]
 
 
-        else:
+        else: # pragma: no cover
             if self.hyperparams['error_on_no_input']:
                 raise RuntimeError("No input columns were selected")
             self.logger.warn("No input columns were selected")
@@ -254,7 +254,7 @@ class SystemWiseDetectionPrimitive(transformer.TransformerPrimitiveBase[Inputs, 
 
         semantic_types = set(column_metadata.get('semantic_types', []))
         return True
-        if len(semantic_types) == 0:
+        if len(semantic_types) == 0: # pragma: no cover
             cls.logger.warning("No semantic types found in column metadata")
             return False
 
@@ -326,7 +326,7 @@ class SystemWiseDetectionPrimitive(transformer.TransformerPrimitiveBase[Inputs, 
 
         return target_columns_metadata
 
-    def _write(self, inputs: Inputs):
+    def _write(self, inputs: Inputs): # pragma: no cover
         inputs.to_csv(str(time.time()) + '.csv')
 
 
@@ -344,7 +344,7 @@ class SystemWiseDetectionPrimitive(transformer.TransformerPrimitiveBase[Inputs, 
             maxOutlierScorePerSystemList = []
             for systemId in systemIds:
                 systemDf = groupedX.get_group(systemId)
-                maxOutlierScorePerSystemList.append(np.max(np.abs(systemDf["value_0"].values)))
+                maxOutlierScorePerSystemList.append(np.max(np.abs(systemDf["scores"].values)))
 
             ranking = np.sort(maxOutlierScorePerSystemList)
             threshold = ranking[int((1 - contamination) * len(ranking))]
@@ -362,7 +362,7 @@ class SystemWiseDetectionPrimitive(transformer.TransformerPrimitiveBase[Inputs, 
             avgOutlierScorePerSystemList = []
             for systemId in systemIds:
                 systemDf = groupedX.get_group(systemId)
-                avgOutlierScorePerSystemList.append(np.mean(np.abs(systemDf["value_0"].values)))
+                avgOutlierScorePerSystemList.append(np.mean(np.abs(systemDf["scores"].values)))
 
             ranking = np.sort(avgOutlierScorePerSystemList)
             threshold = ranking[int((1 - contamination) * len(ranking))]
@@ -380,7 +380,7 @@ class SystemWiseDetectionPrimitive(transformer.TransformerPrimitiveBase[Inputs, 
             OutlierScorePerSystemList = []
             for systemId in systemIds:
                 systemDf = groupedX.get_group(systemId)
-                column_value = systemDf["value_0"].values
+                column_value = systemDf["scores"].values
                 column_score = np.zeros(len(column_value))
                 for iter in range(window_size - 1, len(column_value)):
                     sequence = column_value[iter - window_size + 1:iter + 1]
@@ -407,7 +407,7 @@ class SystemWiseDetectionPrimitive(transformer.TransformerPrimitiveBase[Inputs, 
             OutlierScorePerSystemList = []
             for systemId in systemIds:
                 systemDf = groupedX.get_group(systemId)
-                column_value = systemDf["value_0"].values
+                column_value = systemDf["scores"].values
                 column_score = np.zeros(len(column_value))
                 for iter in range(window_size - 1, len(column_value)):
                     sequence = column_value[iter - window_size + 1:iter + 1]
@@ -436,7 +436,7 @@ class SystemWiseDetectionPrimitive(transformer.TransformerPrimitiveBase[Inputs, 
             OutlierScorePerSystemList = []
             for systemId in systemIds:
                 systemDf = groupedX.get_group(systemId)
-                column_value = systemDf["value_0"].values
+                column_value = systemDf["scores"].values
                 column_score = np.zeros(len(column_value))
                 for iter in range(window_size - 1, len(column_value)):
                     sequence = column_value[iter - window_size + 1:iter + 1]
