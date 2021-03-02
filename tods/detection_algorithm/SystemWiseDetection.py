@@ -9,7 +9,7 @@ from numpy import ndarray
 from collections import OrderedDict
 from scipy import sparse
 import os
-
+import pandas as pd
 import numpy
 import typing
 import time
@@ -176,7 +176,7 @@ class SystemWiseDetectionPrimitive(transformer.TransformerPrimitiveBase[Inputs, 
             system_wise_detection_input = inputs.iloc[:, self._training_indices]
         output_columns = []
         if len(self._training_indices) > 0:
-            system_wise_detection_output = self._system_wise_detection(system_wise_detection_input,self.hyperparams["method_type"],self.hyperparams["window_size"],self.hyperparams["contamination"])
+            system_wise_detection_output = self._system_wise_detection(system_wise_detection_input.values,self.hyperparams["method_type"],self.hyperparams["window_size"],self.hyperparams["contamination"])
             outputs = system_wise_detection_output
 
 
@@ -333,6 +333,7 @@ class SystemWiseDetectionPrimitive(transformer.TransformerPrimitiveBase[Inputs, 
 
 
     def _system_wise_detection(self,X,method_type,window_size,contamination):
+        X = pd.DataFrame(X, columns=['timestamp', 'system_id', 'scores'])
         systemIds = X.system_id.unique()
         groupedX = X.groupby(X.system_id)
 
