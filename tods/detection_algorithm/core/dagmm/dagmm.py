@@ -91,9 +91,9 @@ class DAGMM(BaseDetector):
         self.graph = None
         self.sess = None
 
-    def __del__(self):
-        if self.sess is not None:
-            self.sess.close()
+    #def __del__(self):
+     #   if self.sess is not None:
+      #      self.sess.close()
 
     def fit(self,X,y=None):
         """ Fit the DAGMM model according to the given data.
@@ -174,7 +174,7 @@ class DAGMM(BaseDetector):
             pred_scores = self.decision_function(X)
             self.decision_scores_ = pred_scores
             self._process_decision_scores()
-            return self
+            #return self
 
     def decision_function(self, X):
         """ Calculate anormaly scores (sample energy) on samples in X.
