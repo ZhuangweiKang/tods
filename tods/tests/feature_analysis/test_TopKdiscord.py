@@ -2,17 +2,16 @@ import unittest
 
 from d3m import container, utils
 from d3m.metadata import base as metadata_base
-from tods.feature_analysis.MatrixProfile import MatrixProfilePrimitive
+from tods.feature_analysis.TopKdiscord import TopKdiscord
+from tods.feature_analysis.TopKdiscord import MatrixProfilePrimitive
 
 
 
 class MatrixProfileTest(unittest.TestCase):
     def test_basic(self):
         self.maxDiff = None
-        main = container.DataFrame({'a': [1., 2., 3., 4., 5., 6., 7., 8., 9.],
-                                    'b': [2., 3., 4., 5., 6., 7., 8., 9., 10.], 
-                                    'c': [3., 4., 5., 6., 7., 8., 9., 10., 11.]},
-                                    columns=['a', 'b', 'c'],
+        main = container.DataFrame({'a': [1., 12., 13., 12., 2., 12., 17., 4., 9.]},
+                                    columns=['a'],
                                     generate_metadata=True)
         print(main)
 
@@ -38,18 +37,12 @@ class MatrixProfileTest(unittest.TestCase):
                 'dimension': {
                     'name': 'columns',
                     'semantic_types': ['https://metadata.datadrivendiscovery.org/types/TabularColumn'],
-                    'length': 3,
+                    'length': 1,
                 },
             },
         }, {
             'selector': ['__ALL_ELEMENTS__', 0],
-            'metadata': {'structural_type': 'numpy.float64', 'name': 'a'},
-        }, {
-            'selector': ['__ALL_ELEMENTS__', 1],
-            'metadata': {'structural_type': 'numpy.float64', 'name': 'b'},
-        }, {
-            'selector': ['__ALL_ELEMENTS__', 2],
-            'metadata': {'structural_type': 'numpy.float64', 'name': 'c'}
+            'metadata': {'structural_type': 'numpy.float64', 'name': 'a'}
         }])
 
 
@@ -62,7 +55,7 @@ class MatrixProfileTest(unittest.TestCase):
         #print(type(main))
         primitive = MatrixProfilePrimitive(hyperparams=hyperparams)
         new_main = primitive.produce(inputs=main).value
-        print(new_main)       
+        #print(new_main)       
 
 
         self.assertEqual(utils.to_json_structure(main.metadata.to_internal_simple_structure()), [{
@@ -84,18 +77,12 @@ class MatrixProfileTest(unittest.TestCase):
                 'dimension': {
                     'name': 'columns',
                     'semantic_types': ['https://metadata.datadrivendiscovery.org/types/TabularColumn'],
-                    'length': 3,
+                    'length': 1,
                 },
             },
         }, {
             'selector': ['__ALL_ELEMENTS__', 0],
-            'metadata': {'structural_type': 'numpy.float64', 'name': 'a'},
-        }, {
-            'selector': ['__ALL_ELEMENTS__', 1],
-            'metadata': {'structural_type': 'numpy.float64', 'name': 'b'},
-        }, {
-            'selector': ['__ALL_ELEMENTS__', 2],
-            'metadata': {'structural_type': 'numpy.float64', 'name': 'c'}
+            'metadata': {'structural_type': 'numpy.float64', 'name': 'a'}
         }])
 
 
