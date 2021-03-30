@@ -4,6 +4,8 @@ from sklearn.metrics import precision_recall_curve
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
+import matplotlib.pyplot as plt
+from sklearn import metrics
 
 #prepare the data
 data = np.loadtxt("./500_UCR_Anomaly_robotDOG1_10000_19280_19360.txt")
@@ -39,3 +41,13 @@ f1_scores = 2*recall*precision/(recall+precision)
 
 print('Best threshold: ', thresholds[np.argmax(f1_scores)])
 print('Best F1-Score: ', np.max(f1_scores))
+
+fpr, tpr, threshold = metrics.roc_curve(y_true, y_pred)
+roc_auc = metrics.auc(fpr, tpr)
+
+plt.title('ROC')
+plt.plot(fpr, tpr, 'b', label = 'AUC = %0.2f' % roc_auc)
+plt.legend(loc = 'lower right')
+plt.ylabel('True Positive Rate')
+plt.xlabel('False Positive Rate')
+plt.show()
