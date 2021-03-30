@@ -1,3 +1,4 @@
+%matplotlib inline
 import numpy as np
 from tods.tods_skinterface.primitiveSKI.detection_algorithm.DeepLog_skinterface import DeepLogSKI
 from sklearn.metrics import precision_recall_curve
@@ -6,7 +7,7 @@ from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
 import matplotlib.pyplot as plt
 from sklearn import metrics
-%matplotlib inline
+
 
 
 #prepare the data
