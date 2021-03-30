@@ -6,6 +6,8 @@ from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
 import matplotlib.pyplot as plt
 from sklearn import metrics
+%matplotlib inline
+
 
 #prepare the data
 data = np.loadtxt("./500_UCR_Anomaly_robotDOG1_10000_19280_19360.txt")
