@@ -35,9 +35,11 @@ setup(
                  ]
     },
     install_requires=[
-        #'d3m',
+        'tamu_d3m',
+        'tamu_axolotl',
         'Jinja2',
         'numpy==1.18.2',
+        'combo',
         'simplejson==3.12.0',
         'scikit-learn==0.22.0',
 	'statsmodels==0.11.1',
@@ -54,9 +56,3 @@ setup(
     entry_points = merge_entry_points()
 
 )
-
-try:
-    subprocess.run(['pip', 'install', '-r', 'tods/resources/.requirements.txt'])
-except Exception as e:
-    print(e)
-
