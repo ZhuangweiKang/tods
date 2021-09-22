@@ -7,6 +7,7 @@ import sklearn
 import numpy as np
 import typing
 import time
+import uuid
 
 # Custom import commands if any
 from sklearn.decomposition.truncated_svd import TruncatedSVD
@@ -21,12 +22,13 @@ from d3m.exceptions import PrimitiveNotFittedError
 from d3m.primitive_interfaces.base import CallResult, DockerContainer
 from d3m.primitive_interfaces import base, transformer
 # from d3m.primitive_interfaces.unsupervised_learning import UnsupervisedLearnerPrimitiveBase
+from ..common.TODSBasePrimitives import TODSTransformerPrimitiveBase
 
 
 Inputs = d3m_dataframe
 Outputs = d3m_dataframe
 
-__all__ = ('TRMF',)
+__all__ = ('TRMFPrimitive',)
 
 # class Params(params.Params):
 #     components_: Optional[ndarray]
@@ -160,7 +162,7 @@ class Hyperparams(hyperparams.Hyperparams):
         semantic_types=['https://metadata.datadrivendiscovery.org/types/ControlParameter']
     )
 
-class TRMF(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
+class TRMFPrimitive(TODSTransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
     """Temporal Regularized Matrix Factorization.
 
     Parameters
@@ -222,21 +224,25 @@ class TRMF(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
     Which can be found there: http://www.cs.utexas.edu/~rofuyu/papers/tr-mf-nips.pdf
     """
 
-    __author__: "DATA Lab at Texas A&M University"
     metadata = metadata_base.PrimitiveMetadata({
-         "name": "Temporal Regularized Matrix Factorization Primitive",
-         "python_path": "d3m.primitives.tods.feature_analysis.trmf",
-         "source": {'name': 'DATA Lab at Texas A&M University', 'contact': 'mailto:khlai037@tamu.edu', 
-         'uris': ['https://gitlab.com/lhenry15/tods.git', 'https://gitlab.com/lhenry15/tods/-/blob/Junjie/anomaly-primitives/anomaly_primitives/TRMF.py']},
-         "algorithm_types": [metadata_base.PrimitiveAlgorithmType.TEMPORAL_REGULARIZED_MATRIX_FACTORIZATION, ],
-         "primitive_family": metadata_base.PrimitiveFamily.FEATURE_CONSTRUCTION,
-         "id": "d6be6941-61d0-4cbd-85ef-a10c86aa40b1",
-         "hyperparams_to_tune": ['lags', 'K', 'lambda_f', 'lambda_x', 'lambda_w', 'alpha', 'eta', 'max_iter', 'F_step', 'X_step', 'W_step'],
-         "version": "0.0.1",
+        "__author__": "DATA Lab @ Texas A&M University",
+        "name": "Temporal Regularized Matrix Factorization Primitive",
+        "python_path": "d3m.primitives.tods.feature_analysis.trmf",
+        "source": {
+            'name': 'DATA Lab @ Texas A&M University', 
+            'contact': 'mailto:khlai037@tamu.edu', 
+        },
+        "version": "0.0.1",
+        "hyperparams_to_tune": ['lags', 'K', 'lambda_f', 'lambda_x', 'lambda_w', 'alpha', 'eta', 'max_iter', 'F_step', 'X_step', 'W_step'],
+        "algorithm_types": [
+            metadata_base.PrimitiveAlgorithmType.TODS_PRIMITIVE, 
+        ],
+        "primitive_family": metadata_base.PrimitiveFamily.FEATURE_CONSTRUCTION,
+	'id': str(uuid.uuid3(uuid.NAMESPACE_DNS, 'TRMFPrimitive')),
     })
 
         
-    def produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> CallResult[Outputs]:
+    def _produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> CallResult[Outputs]:
         """
         Process the testing data.
         Args:
@@ -276,14 +282,14 @@ class TRMF(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
         if len(self._training_indices) > 0:
             self._clf.fit(self._training_inputs)
             self._fitted = True
-        else:
+        else: # pragma: no cover
             if self.hyperparams['error_on_no_input']:
                 raise RuntimeError("No input columns were selected")
             self.logger.warn("No input columns were selected")
 
 
 
-        if not self._fitted:
+        if not self._fitted: # pragma: no cover
             raise PrimitiveNotFittedError("Primitive not fitted.")
 
         sk_inputs = inputs
@@ -301,7 +307,7 @@ class TRMF(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
             if len(outputs.columns) == len(self._input_column_names):
                 outputs.columns = self._input_column_names
             output_columns = [outputs]
-        else:
+        else: # pragma: no cover
             if self.hyperparams['error_on_no_input']:
                 raise RuntimeError("No input columns were selected")
             self.logger.warn("No input columns were selected")
@@ -316,7 +322,7 @@ class TRMF(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
 
     
     @classmethod
-    def _get_columns_to_fit(cls, inputs: Inputs, hyperparams: Hyperparams):
+    def _get_columns_to_fit(cls, inputs: Inputs, hyperparams: Hyperparams): # pragma: no cover
         """
         Select columns to fit.
         Args:
@@ -342,7 +348,7 @@ class TRMF(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
         # return columns_to_produce
 
     @classmethod
-    def _can_produce_column(cls, inputs_metadata: metadata_base.DataMetadata, column_index: int, hyperparams: Hyperparams) -> bool:
+    def _can_produce_column(cls, inputs_metadata: metadata_base.DataMetadata, column_index: int, hyperparams: Hyperparams) -> bool: # pragma: no cover
         """
         Output whether a column can be processed.
         Args:
@@ -373,35 +379,35 @@ class TRMF(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
         return False
     
 
-    @classmethod
-    def _get_target_columns_metadata(cls, outputs_metadata: metadata_base.DataMetadata, hyperparams) -> List[OrderedDict]:
-        """
-        Output metadata of selected columns.
-        Args:
-            outputs_metadata: metadata_base.DataMetadata
-            hyperparams: d3m.metadata.hyperparams.Hyperparams
+    # @classmethod
+    # def _get_target_columns_metadata(cls, outputs_metadata: metadata_base.DataMetadata, hyperparams) -> List[OrderedDict]:
+    #     """
+    #     Output metadata of selected columns.
+    #     Args:
+    #         outputs_metadata: metadata_base.DataMetadata
+    #         hyperparams: d3m.metadata.hyperparams.Hyperparams
 
-        Returns:
-            d3m.metadata.base.DataMetadata
-        """
-        outputs_length = outputs_metadata.query((metadata_base.ALL_ELEMENTS,))['dimension']['length']
+    #     Returns:
+    #         d3m.metadata.base.DataMetadata
+    #     """
+    #     outputs_length = outputs_metadata.query((metadata_base.ALL_ELEMENTS,))['dimension']['length']
 
-        target_columns_metadata: List[OrderedDict] = []
-        for column_index in range(outputs_length):
-            column_metadata = OrderedDict(outputs_metadata.query_column(column_index))
+    #     target_columns_metadata: List[OrderedDict] = []
+    #     for column_index in range(outputs_length):
+    #         column_metadata = OrderedDict(outputs_metadata.query_column(column_index))
 
-            # Update semantic types and prepare it for predicted targets.
-            semantic_types = set(column_metadata.get('semantic_types', []))
-            semantic_types_to_remove = set([])
-            add_semantic_types = []
-            add_semantic_types.add(hyperparams["return_semantic_type"])
-            semantic_types = semantic_types - semantic_types_to_remove
-            semantic_types = semantic_types.union(add_semantic_types)
-            column_metadata['semantic_types'] = list(semantic_types)
+    #         # Update semantic types and prepare it for predicted targets.
+    #         semantic_types = set(column_metadata.get('semantic_types', []))
+    #         semantic_types_to_remove = set([])
+    #         add_semantic_types = []
+    #         add_semantic_types.add(hyperparams["return_semantic_type"])
+    #         semantic_types = semantic_types - semantic_types_to_remove
+    #         semantic_types = semantic_types.union(add_semantic_types)
+    #         column_metadata['semantic_types'] = list(semantic_types)
 
-            target_columns_metadata.append(column_metadata)
+    #         target_columns_metadata.append(column_metadata)
 
-        return target_columns_metadata
+    #     return target_columns_metadata
     
     @classmethod
     def _update_predictions_metadata(cls, inputs_metadata: metadata_base.DataMetadata, outputs: Optional[Outputs],
@@ -464,12 +470,6 @@ class TRMF(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
             target_columns_metadata.append(column_metadata)
 
         return target_columns_metadata
-
-    def _write(self, inputs:Inputs):
-        """
-        write inputs to current directory, only for test
-        """
-        inputs.to_csv(str(time.time())+'.csv')
 
 
 """
@@ -564,7 +564,7 @@ class trmf:
         return np.dot(self.F, X_preds)
 
 
-    def _predict_X(self, h):
+    def _predict_X(self, h): # pragma: no cover
         """Predict X h timepoints ahead.
 
         Evaluates matrix X with the help of matrix W.

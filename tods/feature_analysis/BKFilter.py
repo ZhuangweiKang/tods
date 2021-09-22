@@ -7,6 +7,7 @@ import sklearn
 import numpy
 import typing
 import time
+import uuid
 
 from d3m import container
 from d3m.primitive_interfaces import base, transformer
@@ -19,6 +20,7 @@ from d3m import utils
 from d3m.base import utils as base_utils
 from d3m.exceptions import PrimitiveNotFittedError
 from d3m.primitive_interfaces.base import CallResult, DockerContainer
+from ..common.TODSBasePrimitives import TODSTransformerPrimitiveBase
 
 
 import os.path
@@ -26,7 +28,7 @@ import os.path
 import time
 import statsmodels.api as sm
 
-__all__ = ('BKFilter',)
+__all__ = ('BKFilterPrimitive',)
 
 Inputs = container.DataFrame
 Outputs = container.DataFrame
@@ -117,7 +119,7 @@ class Hyperparams(hyperparams.Hyperparams):
     )
 
     
-class BKFilter(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
+class BKFilterPrimitive(TODSTransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
     """
     Filter a time series using the Baxter-King bandpass filter.
 
@@ -154,21 +156,25 @@ class BKFilter(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams
         Decides what semantic type to attach to generated attributes'
     """
 
-    __author__: "DATA Lab at Texas A&M University"
     metadata = metadata_base.PrimitiveMetadata({ 
-         "name": "Baxter-King Filter Primitive",
-         "python_path": "d3m.primitives.tods.feature_analysis.bk_filter",
-         "source": {'name': 'DATA Lab at Texas A&M University', 'contact': 'mailto:khlai037@tamu.edu', 
-         'uris': ['https://gitlab.com/lhenry15/tods.git', 'https://gitlab.com/lhenry15/tods/-/blob/Junjie/anomaly-primitives/anomaly_primitives/DuplicationValidation.py']},
-         "algorithm_types": [metadata_base.PrimitiveAlgorithmType.BK_FILTER,],
-         "primitive_family": metadata_base.PrimitiveFamily.FEATURE_CONSTRUCTION,
-         "id": "b2bfadc5-dbca-482c-b188-8585e5f245c4",
-         "hyperparams_to_tune": ['low', 'high', 'K'],
-         "version": "0.0.1",
+        "__author__": "DATA Lab at Texas A&M University",
+        "name": "Baxter-King Filter Primitive",
+        "python_path": "d3m.primitives.tods.feature_analysis.bk_filter",
+        "source": {
+            'name': 'DATA Lab at Texas A&M University', 
+            'contact': 'mailto:khlai037@tamu.edu', 
+        },
+        "hyperparams_to_tune": ['low', 'high', 'K'],
+        "version": "0.0.1",
+        "algorithm_types": [
+            metadata_base.PrimitiveAlgorithmType.TODS_PRIMITIVE,
+        ],
+        "primitive_family": metadata_base.PrimitiveFamily.FEATURE_CONSTRUCTION,
+	'id': str(uuid.uuid3(uuid.NAMESPACE_DNS, 'BKFilterPrimitive')),
     })
 
 
-    def produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> CallResult[Outputs]:
+    def _produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> CallResult[Outputs]:
         """
         Process the testing data.
         Args:
@@ -186,22 +192,22 @@ class BKFilter(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams
         if len(self._training_indices) > 0:
             # self._clf.fit(self._training_inputs)
             self._fitted = True
-        else:
+        else:   # pragma: no cover
             if self.hyperparams['error_on_no_input']:
                 raise RuntimeError("No input columns were selected")
             self.logger.warn("No input columns were selected")
 
 
 
-        if not self._fitted:
+        if not self._fitted:    # pragma: no cover
             raise PrimitiveNotFittedError("Primitive not fitted.")
         sk_inputs = inputs
-        if self.hyperparams['use_semantic_types']:
+        if self.hyperparams['use_semantic_types']:  # pragma: no cover
             sk_inputs = inputs.iloc[:, self._training_indices]
         output_columns = []
         if len(self._training_indices) > 0:
             sk_output = self._bkfilter(sk_inputs, low=self.hyperparams['low'], high=self.hyperparams['high'], K=self.hyperparams['K'])
-            if sparse.issparse(sk_output):
+            if sparse.issparse(sk_output):  # pragma: no cover
                 sk_output = sk_output.toarray()
             outputs = self._wrap_predictions(inputs, sk_output)
 
@@ -209,7 +215,7 @@ class BKFilter(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams
                 outputs.columns = self._input_column_names
             output_columns = [outputs]           
             
-        else:
+        else:   # pragma: no cover
             if self.hyperparams['error_on_no_input']:
                 raise RuntimeError("No input columns were selected")
             self.logger.warn("No input columns were selected")
@@ -217,14 +223,11 @@ class BKFilter(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams
                                                add_index_columns=self.hyperparams['add_index_columns'],
                                                inputs=inputs, column_indices=self._training_indices,
                                                columns_list=output_columns)
-
-        # self._write(outputs)
-        # self.logger.warning('produce was called3')
         return CallResult(outputs)
         
     
     @classmethod
-    def _get_columns_to_fit(cls, inputs: Inputs, hyperparams: Hyperparams):
+    def _get_columns_to_fit(cls, inputs: Inputs, hyperparams: Hyperparams): # pragma: no cover
         """
         Select columns to fit.
         Args:
@@ -261,7 +264,7 @@ class BKFilter(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams
         # return columns_to_produce
 
     @classmethod
-    def _can_produce_column(cls, inputs_metadata: metadata_base.DataMetadata, column_index: int, hyperparams: Hyperparams) -> bool:
+    def _can_produce_column(cls, inputs_metadata: metadata_base.DataMetadata, column_index: int, hyperparams: Hyperparams) -> bool: # pragma: no cover
         """
         Output whether a column can be processed.
         Args:
@@ -354,8 +357,6 @@ class BKFilter(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams
 
         return target_columns_metadata
 
-    def _write(self, inputs:Inputs):
-        inputs.to_csv(str(time.time())+'.csv')
 
     def _bkfilter(self, X, low, high, K):
         """

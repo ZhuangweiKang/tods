@@ -6,16 +6,14 @@ import collections
 import numpy as np
 import pandas as pd
 
-import common_primitives
-from common_primitives import dataframe_utils, utils
 
 from datetime import datetime, timezone
 from d3m.primitive_interfaces import base, transformer
-from d3m import container, exceptions, utils as d3m_utils
+from d3m import container
 from d3m.metadata import base as metadata_base, hyperparams
 
 
-__all__ = ('TimeIntervalTransform',)
+__all__ = ('TimeIntervalTransformPrimitive',)
 
 Inputs = container.DataFrame
 Outputs = container.DataFrame
@@ -81,7 +79,7 @@ class Hyperparams(hyperparams.Hyperparams):
     
 
 
-class TimeIntervalTransform(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
+class TimeIntervalTransformPrimitive(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
     
     """
     A primitive which configures the time interval of the dataframe.
@@ -92,12 +90,14 @@ class TimeIntervalTransform(transformer.TransformerPrimitiveBase[Inputs, Outputs
         '__author__': "DATA Lab @Texas A&M University",
         'name': "Time Interval Transform",
         'python_path': 'd3m.primitives.tods.data_processing.time_interval_transform',
-        'source': {'name': "DATALAB @Taxes A&M University", 'contact': 'mailto:khlai037@tamu.edu',
-                   'uris': ['https://gitlab.com/lhenry15/tods/-/blob/Yile/anomaly-primitives/anomaly_primitives/TimeIntervalTransform.py']},
-        'algorithm_types': [metadata_base.PrimitiveAlgorithmType.TIME_INTERVAL_TRANSFORM,], 
+        'source': {
+            'name': "DATA Lab @Taxes A&M University", 
+            'contact': 'mailto:khlai037@tamu.edu',
+        },
+        'algorithm_types': [metadata_base.PrimitiveAlgorithmType.TODS_PRIMITIVE,], 
         'primitive_family': metadata_base.PrimitiveFamily.DATA_PREPROCESSING,
-        'id': str(uuid.uuid3(uuid.NAMESPACE_DNS, 'TimeIntervalTransformPrimitive')),
         'hyperparams_to_tune': ['time_interval'],
+        'id': str(uuid.uuid3(uuid.NAMESPACE_DNS, 'TimeIntervalTransformPrimitive')),
         'version': '0.0.2' 
         })
 
@@ -112,15 +112,15 @@ class TimeIntervalTransform(transformer.TransformerPrimitiveBase[Inputs, Outputs
             Container DataFrame with resampled time intervals
         """
 
-        if self.hyperparams['time_interval'] is None:
+        if self.hyperparams['time_interval'] is None: # pragma: no cover
             time_interval = '5T'
         else:
             time_interval = self.hyperparams['time_interval']
 
         try:
             outputs = self._time_interval_transform(inputs, hyperparams)
-            #print(outputs)
-        except Exception as e:
+            
+        except Exception as e: # pragma: no cover
             self.logger.error("Error in Performing Time Interval Transform",e)
 
         self._update_metadata(outputs)

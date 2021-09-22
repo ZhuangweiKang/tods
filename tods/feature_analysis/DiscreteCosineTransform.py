@@ -7,19 +7,20 @@ from d3m import container, utils
 from d3m.base import utils as base_utils
 from d3m.metadata import base as metadata_base, hyperparams
 from d3m.primitive_interfaces import base, transformer
+import uuid
 
-import common_primitives
 import logging
 import math
 from scipy.fft import dct
 from collections import OrderedDict
 from typing import cast, Dict, List, Union, Sequence, Optional, Tuple
+from ..common.TODSBasePrimitives import TODSTransformerPrimitiveBase
 
 
 from scipy import sparse
 from numpy import ndarray
 
-__all__ = ('DiscreteCosineTransform',)
+__all__ = ('DiscreteCosineTransformPrimitive',)
 
 Inputs = container.DataFrame
 Outputs = container.DataFrame
@@ -160,7 +161,7 @@ class DCT:
 
         
 
-class DiscreteCosineTransform(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
+class DiscreteCosineTransformPrimitive(TODSTransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
     """
     Compute the 1-D discrete Cosine Transform.
     Return the Discrete Cosine Transform of arbitrary type sequence x.
@@ -213,27 +214,21 @@ class DiscreteCosineTransform(transformer.TransformerPrimitiveBase[Inputs, Outpu
 
     """
 
-    __author__ = "Data Lab"
-    metadata = metadata_base.PrimitiveMetadata(
-        {
-            "__author__ " : "DATA Lab at Texas A&M University",
+    metadata = metadata_base.PrimitiveMetadata({
+            "__author__ " : "DATA Lab @ Texas A&M University",
             'name': "Discrete Cosine Transform",
             'python_path': 'd3m.primitives.tods.feature_analysis.discrete_cosine_transform',
             'source': {
                 'name': 'DATA Lab at Texas A&M University',
                 'contact': 'mailto:khlai037@tamu.edu',
-                'uris': [
-                    'https://gitlab.com/lhenry15/tods.git',
-                    'https://gitlab.com/lhenry15/tods/-/blob/purav/anomaly-primitives/anomaly_primitives/DiscreteCosineTransform.py',
-                ],
             },
-            'algorithm_types': [
-                metadata_base.PrimitiveAlgorithmType.DISCRETE_COSINE_TRANSFORM,
-            ],
-            'primitive_family': metadata_base.PrimitiveFamily.FEATURE_CONSTRUCTION,
-            'id': '584fa7d5-39cc-4cf8-8d5b-5f3a2648f767',
             'hyperparameters_to_tune':['n','norm','axis','type_'],
             'version': '0.0.1',
+            'algorithm_types': [
+                metadata_base.PrimitiveAlgorithmType.TODS_PRIMITIVE,
+            ],
+            'primitive_family': metadata_base.PrimitiveFamily.FEATURE_CONSTRUCTION,
+	    'id': str(uuid.uuid3(uuid.NAMESPACE_DNS, 'DiscreteCosineTransformPrimitive')),
         },
     )
 
@@ -248,7 +243,7 @@ class DiscreteCosineTransform(transformer.TransformerPrimitiveBase[Inputs, Outpu
                         workers = self.hyperparams['workers']
                         )
 
-    def produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> base.CallResult[Outputs]:
+    def _produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> base.CallResult[Outputs]:
         """
 
             Args:
@@ -373,12 +368,12 @@ class DiscreteCosineTransform(transformer.TransformerPrimitiveBase[Inputs, Outpu
         if len(accepted_semantic_types - semantic_types) == 0:
             return True
 
-        print(semantic_types)
+        # print(semantic_types)
         return False
 
 
     @classmethod
-    def _get_target_columns_metadata(cls, outputs_metadata: metadata_base.DataMetadata, hyperparams) -> List[OrderedDict]:
+    def _get_target_columns_metadata(cls, outputs_metadata: metadata_base.DataMetadata, hyperparams) -> List[OrderedDict]: # pragma: no cover
         """
         Output metadata of selected columns.
         Args:
@@ -474,7 +469,7 @@ class DiscreteCosineTransform(transformer.TransformerPrimitiveBase[Inputs, Outpu
         return target_columns_metadata
 
 
-DiscreteCosineTransform.__doc__ = DiscreteCosineTransform.__doc__
+DiscreteCosineTransformPrimitive.__doc__ = DiscreteCosineTransformPrimitive.__doc__
 
 
 

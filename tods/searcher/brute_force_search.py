@@ -7,7 +7,7 @@ from d3m.metadata.pipeline import Pipeline
 from axolotl.algorithms.base import PipelineSearchBase
 from axolotl.utils import  schemas as schemas_utils
 
-class BruteForceSearch(PipelineSearchBase):
+class BruteForceSearch(PipelineSearchBase): # pragma: no cover
     def __init__(self, problem_description, backend, *, primitives_blocklist=None, ranking_function=None):
         super().__init__(problem_description=problem_description, backend=backend,
                 primitives_blocklist=primitives_blocklist, ranking_function=ranking_function)
@@ -73,7 +73,7 @@ class BruteForceSearch(PipelineSearchBase):
         pipeline_candidates = _generate_pipelines(primitive_python_paths)
         return pipeline_candidates
 
-primitive_python_paths = {
+primitive_python_paths = { # pragma: no cover
     'data_processing': [
         #'d3m.primitives.tods.data_processing.time_interval_transform',
         #'d3m.primitives.tods.data_processing.categorical_to_binary',
@@ -153,7 +153,7 @@ primitive_python_paths = {
 }
 
 
-def _rank_first_metric(pipeline_result):
+def _rank_first_metric(pipeline_result): # pragma: no cover
     if pipeline_result.status == 'COMPLETED':
         scores = pipeline_result.scores
         pipeline_result.rank = -scores['value'][0]
@@ -163,22 +163,22 @@ def _rank_first_metric(pipeline_result):
         pipeline_result.rank = 1
         return pipeline_result
 
-def _generate_data_preparation_params():
+def _generate_data_preparation_params(): # pragma: no cover
     from axolotl.utils import schemas as schemas_utils
     data_preparation_params = schemas_utils.DATA_PREPARATION_PARAMS['no_split']
     return data_preparation_params
     
-def _generate_scoring_pipeline():
+def _generate_scoring_pipeline(): # pragma: no cover
     from axolotl.utils import schemas as schemas_utils
     scoring_pipeline = schemas_utils.get_scoring_pipeline()
     return scoring_pipeline
     
-def _generate_data_preparation_pipeline():
+def _generate_data_preparation_pipeline(): # pragma: no cover
     from axolotl.utils import schemas as schemas_utils
     data_preparation_pipeline = schemas_utils.get_splitting_pipeline("TRAINING_DATA")
     return data_preparation_pipeline
 
-def _generate_pipline(combinations):
+def _generate_pipline(combinations): # pragma: no cover
     from d3m import index
     from d3m.metadata.base import ArgumentType
     from d3m.metadata.pipeline import Pipeline, PrimitiveStep
@@ -191,19 +191,19 @@ def _generate_pipline(combinations):
         
         # The first three steps are fixed
         # Step 0: dataset_to_dataframe
-        step_0 = PrimitiveStep(primitive=index.get_primitive('d3m.primitives.data_transformation.dataset_to_dataframe.Common'))
+        step_0 = PrimitiveStep(primitive=index.get_primitive('d3m.primitives.tods.data_processing.dataset_to_dataframe'))
         step_0.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
         step_0.add_output('produce')
         pipeline_description.add_step(step_0)
 
-        # Step 1: column_parser
-        step_1 = PrimitiveStep(primitive=index.get_primitive('d3m.primitives.data_transformation.column_parser.Common'))
+        # Step 1: column_parsr
+        step_1 = PrimitiveStep(primitive=index.get_primitive('d3m.primitives.tods.data_processing.column_parser'))
         step_1.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.0.produce')
         step_1.add_output('produce')
         pipeline_description.add_step(step_1)
 
         # Step 2: extract_columns_by_semantic_types(attributes)
-        step_2 = PrimitiveStep(primitive=index.get_primitive('d3m.primitives.data_transformation.extract_columns_by_semantic_types.Common'))
+        step_2 = PrimitiveStep(primitive=index.get_primitive('d3m.primitives.tods.data_processing.extract_columns_by_semantic_types'))
         step_2.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce')
         step_2.add_output('produce')
         step_2.add_hyperparameter(name='semantic_types', argument_type=ArgumentType.VALUE,
@@ -211,7 +211,7 @@ def _generate_pipline(combinations):
         pipeline_description.add_step(step_2)
 
         # Step 3: extract_columns_by_semantic_types(targets)
-        step_3 = PrimitiveStep(primitive=index.get_primitive('d3m.primitives.data_transformation.extract_columns_by_semantic_types.Common'))
+        step_3 = PrimitiveStep(primitive=index.get_primitive('d3m.primitives.tods.data_processing.extract_columns_by_semantic_types'))
         step_3.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.0.produce')
         step_3.add_output('produce')
         step_3.add_hyperparameter(name='semantic_types', argument_type=ArgumentType.VALUE,
@@ -243,7 +243,7 @@ def _generate_pipline(combinations):
         #pipeline_description.add_step(tods_step_7)
 
         # Finalize the pipeline
-        final_step = PrimitiveStep(primitive=index.get_primitive('d3m.primitives.data_transformation.construct_predictions.Common'))
+        final_step = PrimitiveStep(primitive=index.get_primitive('d3m.primitives.tods.data_processing.construct_predictions'))
         final_step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.6.produce')
         final_step.add_argument(name='reference', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce')
         final_step.add_output('produce')
@@ -257,7 +257,7 @@ def _generate_pipline(combinations):
         piplines.append(pipeline_description)
     return piplines
 
-def _generate_pipelines(primitive_python_paths, cpu_count=40):
+def _generate_pipelines(primitive_python_paths, cpu_count=40): # pragma: no cover
     """
     Args:
         primitive_python_paths: a list of primitive Python paths for algorithms

@@ -10,7 +10,7 @@ from collections import OrderedDict
 from scipy import sparse
 import os
 from scipy import stats
-
+import uuid
 import numpy
 import typing
 import time
@@ -24,6 +24,7 @@ from d3m.metadata import hyperparams, params, base as metadata_base
 from d3m.base import utils as base_utils
 from d3m.exceptions import PrimitiveNotFittedError
 from d3m.exceptions import UnexpectedValueError
+from ..common.TODSBasePrimitives import TODSTransformerPrimitiveBase
 
 __all__ = ('StatisticalGmeanPrimitive',)
 
@@ -88,43 +89,30 @@ class Hyperparams(hyperparams.Hyperparams):
 
 
 
-class StatisticalGmeanPrimitive(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
+class StatisticalGmeanPrimitive(TODSTransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
     """
     Primitive to find gmean of time series .
     Will only take positive values as inputs .
     """
-    __author__ = "DATA Lab at Texas A&M University",
-    metadata = metadata_base.PrimitiveMetadata(
-        {
-            'id': '6be88a7d-e72d-45c6-bd3b-3191d4eff623',
-            'version': '0.1.0',
-            'name': 'Time Series Decompostional',
-            'python_path': 'd3m.primitives.tods.feature_analysis.statistical_g_mean',
-            'keywords': ['Time Series','Gmean'],
-            "hyperparams_to_tune": ['window_size'],
-            'source': {
-                'name': 'DATA Lab at Texas A&M University',
-                'uris': ['https://gitlab.com/lhenry15/tods.git','https://gitlab.com/lhenry15/tods/-/blob/devesh/tods/feature_analysis/StatisticalGmean.py'],
-                'contact': 'mailto:khlai037@tamu.edu'
+    metadata = metadata_base.PrimitiveMetadata({
+        "__author__": "DATA Lab @ Texas A&M University",
+        'name': 'Time Series Decompostional',
+        'python_path': 'd3m.primitives.tods.feature_analysis.statistical_g_mean',
+        'keywords': ['Time Series','Gmean'],
+        'source': {
+            'name': 'DATA Lab @ Texas A&M University',
+            'contact': 'mailto:khlai037@tamu.edu'
+        },
+        "hyperparams_to_tune": ['window_size'],
+        'version': '0.1.0',
+        'algorithm_types': [
+            metadata_base.PrimitiveAlgorithmType.TODS_PRIMITIVE,
+        ],
+        'primitive_family': metadata_base.PrimitiveFamily.FEATURE_CONSTRUCTION,
+	'id': str(uuid.uuid3(uuid.NAMESPACE_DNS, 'StatisticalGmeanPrimitive')),
+    })
 
-            },
-            'installation': [
-                {'type': metadata_base.PrimitiveInstallationType.PIP,
-                 'package_uri': 'git+https://gitlab.com/lhenry15/tods.git@{git_commit}#egg=TODS'.format(
-                     git_commit=d3m_utils.current_git_commit(os.path.dirname(__file__)),
-                 ),
-                 }
-
-            ],
-            'algorithm_types': [
-                metadata_base.PrimitiveAlgorithmType.DATA_PROFILING,
-            ],
-            'primitive_family': metadata_base.PrimitiveFamily.FEATURE_CONSTRUCTION,
-
-        }
-    )
-
-    def produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> base.CallResult[Outputs]:
+    def _produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> base.CallResult[Outputs]:
         """
 
         Args:
@@ -145,7 +133,7 @@ class StatisticalGmeanPrimitive(transformer.TransformerPrimitiveBase[Inputs, Out
         if len(self._training_indices) > 0:
             # self._clf.fit(self._training_inputs)
             self._fitted = True
-        else:
+        else: # pragma: no cover
             if self.hyperparams['error_on_no_input']:
                 raise RuntimeError("No input columns were selected")
             self.logger.warn("No input columns were selected")
@@ -170,7 +158,7 @@ class StatisticalGmeanPrimitive(transformer.TransformerPrimitiveBase[Inputs, Out
             output_columns = [outputs]
 
 
-        else:
+        else: # pragma: no cover
             if self.hyperparams['error_on_no_input']:
                 raise RuntimeError("No input columns were selected")
             self.logger.warn("No input columns were selected")
@@ -306,7 +294,7 @@ class StatisticalGmeanPrimitive(transformer.TransformerPrimitiveBase[Inputs, Out
 
         return target_columns_metadata
 
-    def _write(self, inputs: Inputs):
+    def _write(self, inputs: Inputs): # pragma: no cover
         inputs.to_csv(str(time.time()) + '.csv')
 
 

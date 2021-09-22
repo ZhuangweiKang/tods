@@ -3,8 +3,8 @@ import typing
 from numpy import ndarray
 import numpy as np
 
-from d3m import container, utils as d3m_utils
 from d3m.base import utils as base_utils
+from d3m import container, exceptions
 from d3m.metadata import base as metadata_base, hyperparams
 from d3m.primitive_interfaces import base, transformer
 from typing import Union
@@ -13,15 +13,15 @@ import pywt
 import pandas
 import math
 
-import common_primitives
 import numpy
 from typing import Optional, List
 from collections import OrderedDict
 from scipy import sparse
 import logging
 import uuid
+from ..common.TODSBasePrimitives import TODSTransformerPrimitiveBase
 
-__all__ = ('WaveletTransformer',)
+__all__ = ('WaveletTransformPrimitive',)
 
 Inputs = container.DataFrame
 Outputs = container.DataFrame
@@ -149,7 +149,7 @@ class Hyperparams(hyperparams.Hyperparams):
     )
 
 
-class WaveletTransformer(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
+class WaveletTransformPrimitive(TODSTransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
     """
     A primitive of Multilevel 1D Discrete Wavelet Transform of data.
     See `PyWavelet documentation <https://pywavelets.readthedocs.io/en/latest/ref/>`_ for details.
@@ -175,20 +175,22 @@ class WaveletTransformer(transformer.TransformerPrimitiveBase[Inputs, Outputs, H
         None
     """
 
-    __author__ = "DATALAB @Taxes A&M University"
-    metadata = metadata_base.PrimitiveMetadata(
-        {
-            "name": "Wavelet_transformation",
-            "python_path": "d3m.primitives.tods.feature_analysis.wavelet_transform",
-            "source": {'name': "DATALAB @Taxes A&M University", 'contact': 'mailto:khlai037@tamu.edu',
-                       'uris': ['https://gitlab.com/lhenry15/tods.git']},
-            "algorithm_types": [metadata_base.PrimitiveAlgorithmType.FREQUENCY_TRANSFORM, ],
-            "primitive_family": metadata_base.PrimitiveFamily.FEATURE_EXTRACTION,
-            "version": "0.0.1",
-            "hyperparams_to_tune": ['wavelet', 'mode', 'axis', 'level'],
-            "id": str(uuid.uuid3(uuid.NAMESPACE_DNS, 'WaveletTransformer')),
+    metadata = metadata_base.PrimitiveMetadata({
+        "__author__": "DATA Lab @ Texas A&M University",
+        "name": "Wavelet_transformation",
+        "python_path": "d3m.primitives.tods.feature_analysis.wavelet_transform",
+        "source": {
+            'name': "DATA Lab @ Taxes A&M University", 
+            'contact': 'mailto:khlai037@tamu.edu',
         },
-    )
+        "version": "0.0.1",
+        "hyperparams_to_tune": ['wavelet', 'mode', 'axis', 'level'],
+        "algorithm_types": [
+            metadata_base.PrimitiveAlgorithmType.TODS_PRIMITIVE, 
+        ],
+        "primitive_family": metadata_base.PrimitiveFamily.FEATURE_EXTRACTION,
+        "id": str(uuid.uuid3(uuid.NAMESPACE_DNS, 'WaveletTransformer')),
+    })
 
     def __init__(self, *, hyperparams: Hyperparams) -> None:
         super().__init__(hyperparams=hyperparams) # , random_seed=random_seed, docker_containers=docker_containers)
@@ -202,7 +204,7 @@ class WaveletTransformer(transformer.TransformerPrimitiveBase[Inputs, Outputs, H
                           )
 
 
-    def produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> base.CallResult[Outputs]:
+    def _produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> base.CallResult[Outputs]:
         """
         Process the testing data.
         Args:
@@ -221,18 +223,18 @@ class WaveletTransformer(transformer.TransformerPrimitiveBase[Inputs, Outputs, H
 
 
         sk_inputs = inputs
-        if self.hyperparams['use_semantic_types']:
+        if self.hyperparams['use_semantic_types']: # pragma: no cover
             sk_inputs = inputs.iloc[:, self._columns_to_produce]
         output_columns = []
         if len(self._columns_to_produce) > 0:
             sk_output = self._clf.produce(sk_inputs, self.hyperparams['inverse'])
-            if sparse.issparse(sk_output):
+            if sparse.issparse(sk_output): # pragma: no cover
                 sk_output = sk_output.toarray()
             outputs = self._wrap_predictions(inputs, sk_output)
             if len(outputs.columns) == len(self._input_column_names):
                 outputs.columns = self._input_column_names
             output_columns = [outputs]
-        else:
+        else: # pragma: no cover
             if self.hyperparams['error_on_no_input']:
                 raise RuntimeError("No input columns were selected")
             self.logger.warn("No input columns were selected")
@@ -253,7 +255,7 @@ class WaveletTransformer(transformer.TransformerPrimitiveBase[Inputs, Outputs, H
         # return base.CallResult(dataframe)
 
     @classmethod
-    def _get_columns_to_fit(cls, inputs: Inputs, hyperparams: Hyperparams):
+    def _get_columns_to_fit(cls, inputs: Inputs, hyperparams: Hyperparams): # pragma: no cover
         """
         Select columns to fit.
         Args:
@@ -285,7 +287,7 @@ class WaveletTransformer(transformer.TransformerPrimitiveBase[Inputs, Outputs, H
 
     @classmethod
     def _can_produce_column(cls, inputs_metadata: metadata_base.DataMetadata, column_index: int,
-                            hyperparams: Hyperparams) -> bool:
+                            hyperparams: Hyperparams) -> bool: # pragma: no cover
         """
         Output whether a column can be processed.
         Args:
@@ -324,7 +326,7 @@ class WaveletTransformer(transformer.TransformerPrimitiveBase[Inputs, Outputs, H
 
     @classmethod
     def _get_target_columns_metadata(cls, outputs_metadata: metadata_base.DataMetadata, hyperparams) -> List[
-        OrderedDict]:
+        OrderedDict]: # pragma: no cover
         """
         Output metadata of selected columns.
         Args:
@@ -355,7 +357,7 @@ class WaveletTransformer(transformer.TransformerPrimitiveBase[Inputs, Outputs, H
 
     @classmethod
     def _update_predictions_metadata(cls, inputs_metadata: metadata_base.DataMetadata, outputs: Optional[Outputs],
-                                     target_columns_metadata: List[OrderedDict]) -> metadata_base.DataMetadata:
+                                     target_columns_metadata: List[OrderedDict]) -> metadata_base.DataMetadata: # pragma: no cover
         """
         Updata metadata for selected columns.
         Args:
@@ -374,7 +376,7 @@ class WaveletTransformer(transformer.TransformerPrimitiveBase[Inputs, Outputs, H
 
         return outputs_metadata
 
-    def _wrap_predictions(self, inputs: Inputs, predictions: ndarray) -> Outputs:
+    def _wrap_predictions(self, inputs: Inputs, predictions: ndarray) -> Outputs: # pragma: no cover
         """
         Wrap predictions into dataframe
         Args:
@@ -392,7 +394,7 @@ class WaveletTransformer(transformer.TransformerPrimitiveBase[Inputs, Outputs, H
 
     @classmethod
     def _copy_inputs_metadata(cls, inputs_metadata: metadata_base.DataMetadata, input_indices: List[int],
-                              outputs_metadata: metadata_base.DataMetadata, hyperparams):
+                              outputs_metadata: metadata_base.DataMetadata, hyperparams): # pragma: no cover
         """
         Updata metadata for selected columns.
         Args:
@@ -438,7 +440,7 @@ class WaveletTransformer(transformer.TransformerPrimitiveBase[Inputs, Outputs, H
         # print(target_columns_metadata)
         return target_columns_metadata
 
-WaveletTransformer.__doc__ = WaveletTransformer.__doc__
+WaveletTransformPrimitive.__doc__ = WaveletTransformPrimitive.__doc__
 
 class Wavelet:
 
@@ -486,7 +488,7 @@ class Wavelet:
 
         return coeffs_buf # coeffs_T
 
-    def transform_to_single_dataframe(self, data):
+    def transform_to_single_dataframe(self, data): # pragma: no cover
 
         # print(data)
         data_to_transform = data.squeeze(1)
@@ -515,7 +517,7 @@ class Wavelet:
 
         return coeffs_T
 
-    def inverse_transform_to_dataframe(self, coeffs):
+    def inverse_transform_to_dataframe(self, coeffs): # pragma: no cover
         # print('=======inverse_transform======')
         # print('level: ', self._level)
         # print(coeffs)
@@ -527,7 +529,7 @@ class Wavelet:
         # print(data)
         return data # [0:-1]
 
-    def inverse_transform_to_single_dataframe(self, coeffs):
+    def inverse_transform_to_single_dataframe(self, coeffs): # pragma: no cover
         # print('=======inverse_transform======')
         # print('level: ', self._level)
         # print(coeffs)

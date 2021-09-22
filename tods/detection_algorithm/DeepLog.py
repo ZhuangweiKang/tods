@@ -48,7 +48,7 @@ from .UODBasePrimitive import Params_ODBase, Hyperparams_ODBase, UnsupervisedOut
 
 
 
-__all__ = ('DeepLog',)
+__all__ = ('DeepLogPrimitive',)
 
 Inputs = container.DataFrame
 Outputs = container.DataFrame
@@ -159,21 +159,23 @@ class DeepLogPrimitive(UnsupervisedOutlierDetectorBase[Inputs, Outputs, Params, 
 
     """
 
-    __author__ = "DATA Lab at Texas A&M University",
-    metadata = metadata_base.PrimitiveMetadata(
-        {
+    metadata = metadata_base.PrimitiveMetadata({
         '__author__': "DATA Lab @Texas A&M University",
         'name': "DeepLog Anomolay Detection",
         'python_path': 'd3m.primitives.tods.detection_algorithm.deeplog',
-        'source': {'name': "DATALAB @Taxes A&M University", 'contact': 'mailto:khlai037@tamu.edu',
-                   'uris': ['https://gitlab.com/lhenry15/tods/-/blob/Yile/anomaly-primitives/anomaly_primitives/MatrixProfile.py']},
-        'algorithm_types': [metadata_base.PrimitiveAlgorithmType.DEEPLOG], 
-        'primitive_family': metadata_base.PrimitiveFamily.ANOMALY_DETECTION,
-        'id': str(uuid.uuid3(uuid.NAMESPACE_DNS, 'DeepLogPrimitive')),
+        'source': {
+            'name': "DATALAB @Taxes A&M University", 
+            'contact': 'mailto:khlai037@tamu.edu',
+        },
         'hyperparams_to_tune': ['hidden_size', 'loss', 'optimizer', 'epochs', 'batch_size',
                                 'l2_regularizer', 'validation_size', 
                                 'window_size', 'features', 'stacked_layers', 'preprocessing', 'verbose', 'dropout_rate','contamination'],
         'version': '0.0.1', 
+        'algorithm_types': [
+            metadata_base.PrimitiveAlgorithmType.TODS_PRIMITIVE
+        ], 
+        'primitive_family': metadata_base.PrimitiveFamily.ANOMALY_DETECTION,
+        'id': str(uuid.uuid3(uuid.NAMESPACE_DNS, 'DeepLogPrimitive')),
         }
     )
 
@@ -304,14 +306,15 @@ class DeeplogLstm(BaseDetector):
             if(layers == self.stacked_layers -1 ):
                 model.add(LSTM(self.hidden_size, return_sequences=False,dropout = self.dropout_rate))
                 continue
-            model.add(LSTM(self.hidden_size,return_sequences=True,dropout = self.dropout_rate))
+            model.add(LSTM(self.hidden_size,return_sequences=True,dropout = self.dropout_rate)) # pragma: no cover
         #output layer
 
         model.add(Dense(self.n_features_))
         # Compile model
         model.compile(loss=self.loss, optimizer=self.optimizer)
         if self.verbose >= 1:
-            print(model.summary())
+            #print(model.summary())
+            pass
         return model
 
     def fit(self,X,y=None):
@@ -364,7 +367,7 @@ class DeeplogLstm(BaseDetector):
         if self.preprocessing:
             self.scaler_ = StandardScaler()
             X_norm = self.scaler_.fit_transform(X)
-        else:
+        else:   # pragma: no cover
             X_norm = np.copy(X)
 
         X_data = []
@@ -396,9 +399,9 @@ class DeeplogLstm(BaseDetector):
         check_is_fitted(self, ['model_', 'history_'])
 
         X = check_array(X)
-        print("inside")
-        print(X.shape)
-        print(X[0])
+        #print("inside")
+        #print(X.shape)
+        #print(X[0])
         X_norm,Y_norm = self._preprocess_data_for_LSTM(X)
         pred_scores = np.zeros(X.shape)
         pred_scores[self.window_size:] = self.model_.predict(X_norm)

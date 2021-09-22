@@ -7,6 +7,7 @@ import sklearn
 import numpy
 import typing
 import time
+import uuid
 
 from d3m import container
 from d3m.primitive_interfaces import base, transformer
@@ -20,10 +21,11 @@ from d3m.base import utils as base_utils
 from d3m.exceptions import PrimitiveNotFittedError
 from d3m.primitive_interfaces.base import CallResult, DockerContainer
 
+from ..common.TODSBasePrimitives import TODSTransformerPrimitiveBase
 
 import statsmodels.api as sm
 
-__all__ = ('HPFilter',)
+__all__ = ('HPFilterPrimitive',)
 
 Inputs = container.DataFrame
 Outputs = container.DataFrame
@@ -100,7 +102,7 @@ class Hyperparams(hyperparams.Hyperparams):
     )
 
     
-class HPFilter(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
+class HPFilterPrimitive(TODSTransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
     """
     Filter a time series using the Hodrick-Prescott filter.
 
@@ -131,21 +133,25 @@ class HPFilter(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams
         Decides what semantic type to attach to generated attributes'
     """
 
-    __author__: "DATA Lab at Texas A&M University"
     metadata = metadata_base.PrimitiveMetadata({
+         "__author__": "DATA Lab at Texas A&M University",
          "name": "Hodrick-Prescott filter Primitive",
          "python_path": "d3m.primitives.tods.feature_analysis.hp_filter",
-         "source": {'name': 'DATA Lab at Texas A&M University', 'contact': 'mailto:khlai037@tamu.edu', 
-         'uris': ['https://gitlab.com/lhenry15/tods.git', 'https://gitlab.com/lhenry15/tods/-/blob/Junjie/anomaly-primitives/anomaly_primitives/DuplicationValidation.py']},
-         "algorithm_types": [metadata_base.PrimitiveAlgorithmType.HP_FILTER,],
-         "primitive_family": metadata_base.PrimitiveFamily.FEATURE_CONSTRUCTION,
-         "id": "3af1be06-e45e-4ead-8523-4373264598e4",
+         "source": {
+             'name': 'DATA Lab at Texas A&M University', 
+             'contact': 'mailto:khlai037@tamu.edu', 
+         },
          "hyperparams_to_tune": ['lamb'],
          "version": "0.0.1",
+         "algorithm_types": [
+             metadata_base.PrimitiveAlgorithmType.TODS_PRIMITIVE,
+         ],
+         "primitive_family": metadata_base.PrimitiveFamily.FEATURE_CONSTRUCTION,
+	 'id': str(uuid.uuid3(uuid.NAMESPACE_DNS, 'HPFilterPrimitive')),
     })
 
 
-    def produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> CallResult[Outputs]:
+    def _produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> CallResult[Outputs]:
         """
         Process the testing data.
         Args:
@@ -163,14 +169,14 @@ class HPFilter(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams
         if len(self._training_indices) > 0:
             # self._clf.fit(self._training_inputs)
             self._fitted = True
-        else:
+        else: # pragma: no cover
             if self.hyperparams['error_on_no_input']:
                 raise RuntimeError("No input columns were selected")
             self.logger.warn("No input columns were selected")
 
 
 
-        if not self._fitted:
+        if not self._fitted: # pragma: no cover
             raise PrimitiveNotFittedError("Primitive not fitted.")
         sk_inputs = inputs
         if self.hyperparams['use_semantic_types']:
@@ -186,7 +192,7 @@ class HPFilter(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams
                 outputs.columns = self._input_column_names
             output_columns = [outputs]           
             
-        else:
+        else: # pragma: no cover
             if self.hyperparams['error_on_no_input']:
                 raise RuntimeError("No input columns were selected")
             self.logger.warn("No input columns were selected")
@@ -194,14 +200,11 @@ class HPFilter(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams
                                                add_index_columns=self.hyperparams['add_index_columns'],
                                                inputs=inputs, column_indices=self._training_indices,
                                                columns_list=output_columns)
-
-        # self._write(outputs)
-        # self.logger.warning('produce was called3')
         return CallResult(outputs)
         
     
     @classmethod
-    def _get_columns_to_fit(cls, inputs: Inputs, hyperparams: Hyperparams):
+    def _get_columns_to_fit(cls, inputs: Inputs, hyperparams: Hyperparams): # pragma: no cover
         """
         Select columns to fit.
         Args:
@@ -238,7 +241,7 @@ class HPFilter(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams
         # return columns_to_produce
 
     @classmethod
-    def _can_produce_column(cls, inputs_metadata: metadata_base.DataMetadata, column_index: int, hyperparams: Hyperparams) -> bool:
+    def _can_produce_column(cls, inputs_metadata: metadata_base.DataMetadata, column_index: int, hyperparams: Hyperparams) -> bool: # pragma: no cover
         """
         Output whether a column can be processed.
         Args:
@@ -330,9 +333,6 @@ class HPFilter(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams
             target_columns_metadata.append(column_metadata)
 
         return target_columns_metadata
-
-    def _write(self, inputs:Inputs):
-        inputs.to_csv(str(time.time())+'.csv')
 
     def _hpfilter(self, X, lamb):
         """

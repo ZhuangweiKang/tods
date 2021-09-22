@@ -6,6 +6,7 @@ import os
 import sklearn
 import numpy
 import typing
+import uuid
 
 # Custom import commands if any
 from sklearn.impute import SimpleImputer
@@ -21,6 +22,8 @@ from d3m.exceptions import PrimitiveNotFittedError
 from d3m.primitive_interfaces.base import CallResult, DockerContainer
 from d3m.primitive_interfaces.unsupervised_learning import UnsupervisedLearnerPrimitiveBase
 
+
+__all__ = ('SKImputerPrimitive',)
 
 Inputs = d3m_dataframe
 Outputs = d3m_dataframe
@@ -120,29 +123,26 @@ class Hyperparams(hyperparams.Hyperparams):
         semantic_types=['https://metadata.datadrivendiscovery.org/types/ControlParameter']
     )
 
-class SKImputer(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, Hyperparams]):
+class SKImputerPrimitive(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, Hyperparams]):
     """
     Primitive wrapping for sklearn SimpleImputer
     `sklearn documentation <https://scikit-learn.org/stable/modules/generated/sklearn.impute.SimpleImputer.html>`_
     
     """
     
-    __author__ = "DataLab @ Texas A&M University"
     metadata = metadata_base.PrimitiveMetadata({ 
-         "algorithm_types": [metadata_base.PrimitiveAlgorithmType.IMPUTATION, ],
+         "__author__": "DATA Lab @ Texas A&M University",
          "name": "sklearn.impute.SimpleImputer",
-         "primitive_family": metadata_base.PrimitiveFamily.DATA_CLEANING,
          "python_path": "d3m.primitives.tods.data_processing.impute_missing",
-         "source": {'name': 'JPL', 'contact': 'mailto:shah@jpl.nasa.gov', 'uris': ['https://gitlab.com/datadrivendiscovery/sklearn-wrap/issues', 'https://scikit-learn.org/stable/modules/generated/sklearn.impute.SimpleImputer.html']},
+         "source": {
+             'name': 'DATA Lab @ Texas A&M University', 
+             'contact': 'mailto:khlai037@tamu.edu', 
+         },
          "version": "2019.11.13",
-         "id": "d016df89-de62-3c53-87ed-c06bb6a23cde",
          "hyperparams_to_tune": ['strategy'],
-         'installation': [
-                        {'type': metadata_base.PrimitiveInstallationType.PIP,
-                           'package_uri': 'git+https://gitlab.com/datadrivendiscovery/sklearn-wrap.git@{git_commit}#egg=sklearn_wrap'.format(
-                               git_commit=utils.current_git_commit(os.path.dirname(__file__)),
-                            ),
-                           }]
+         "algorithm_types": [metadata_base.PrimitiveAlgorithmType.TODS_PRIMITIVE, ],
+         "primitive_family": metadata_base.PrimitiveFamily.DATA_CLEANING,
+	 'id': str(uuid.uuid3(uuid.NAMESPACE_DNS, 'SKImputerPrimitive')),
     })
 
     def __init__(self, *,
@@ -192,7 +192,7 @@ class SKImputer(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, Hyperp
             self._clf.fit(self._training_inputs)
             self._fitted = True
         else:
-            if self.hyperparams['error_on_no_input']:
+            if self.hyperparams['error_on_no_input']: # pragma: no cover
                 raise RuntimeError("No input columns were selected")
             self.logger.warn("No input columns were selected")
         return CallResult(None)
@@ -213,7 +213,7 @@ class SKImputer(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, Hyperp
             output.columns = [inputs.columns[idx] for idx in range(len(inputs.columns)) if idx in self._training_indices]
             output = [output]
         else:
-            if self.hyperparams['error_on_no_input']:
+            if self.hyperparams['error_on_no_input']: # pragma: no cover
                 raise RuntimeError("No input columns were selected")
             self.logger.warn("No input columns were selected")
         _, _, dropped_cols = self._get_columns_to_fit(inputs, self.hyperparams)
@@ -306,7 +306,7 @@ class SKImputer(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, Hyperp
         return columns_to_remove
 
     @classmethod
-    def _can_produce_column(cls, inputs_metadata: metadata_base.DataMetadata, column_index: int, hyperparams: Hyperparams) -> bool:
+    def _can_produce_column(cls, inputs_metadata: metadata_base.DataMetadata, column_index: int, hyperparams: Hyperparams) -> bool: # pragma: no cover
         column_metadata = inputs_metadata.query((metadata_base.ALL_ELEMENTS, column_index))
 
         accepted_structural_types = (int, float, numpy.integer, numpy.float64)
@@ -328,7 +328,7 @@ class SKImputer(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, Hyperp
     
 
     @classmethod
-    def _get_target_columns_metadata(cls, outputs_metadata: metadata_base.DataMetadata, hyperparams) -> List[OrderedDict]:
+    def _get_target_columns_metadata(cls, outputs_metadata: metadata_base.DataMetadata, hyperparams) -> List[OrderedDict]: # pragma: no cover
         outputs_length = outputs_metadata.query((metadata_base.ALL_ELEMENTS,))['dimension']['length']
 
         target_columns_metadata: List[OrderedDict] = []
@@ -388,4 +388,4 @@ class SKImputer(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, Hyperp
         return target_columns_metadata
 
 
-SKImputer.__doc__ = SimpleImputer.__doc__
+SKImputerPrimitive.__doc__ = SimpleImputer.__doc__

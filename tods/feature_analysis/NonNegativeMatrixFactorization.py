@@ -7,6 +7,7 @@ from d3m.primitive_interfaces.base import CallResult, DockerContainer
 from typing import cast, Dict, List, Union, Sequence, Optional, Tuple
 from collections import OrderedDict
 from scipy import sparse
+import uuid
 
 import nimfa
 import pandas as pd 
@@ -14,9 +15,10 @@ import numpy
 from numpy import ndarray
 import warnings
 
+from ..common.TODSBasePrimitives import TODSTransformerPrimitiveBase
 
 
-__all__ = ('NonNegativeMatrixFactorization',)
+__all__ = ('NonNegativeMatrixFactorizationPrimitive',)
 
 Inputs = container.DataFrame
 Outputs = container.DataFrame
@@ -210,7 +212,7 @@ class NMF:
 		return result
 
 
-class NonNegativeMatrixFactorization(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
+class NonNegativeMatrixFactorizationPrimitive(TODSTransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
 	"""
 	Calculates Latent factors of a given matrix of timeseries data
 
@@ -266,29 +268,22 @@ class NonNegativeMatrixFactorization(transformer.TransformerPrimitiveBase[Inputs
 
 
 
-	__author__ = "Data Lab"
-	metadata = metadata_base.PrimitiveMetadata(
-	{
-		'__author__' : "DATA Lab at Texas A&M University",
-		'name': "Fast Fourier Transform",
-		'python_path': 'd3m.primitives.tods.feature_analysis.non_negative_matrix_factorization',
-		'source': {
-		'name': 'DATA Lab at Texas A&M University',
+	metadata = metadata_base.PrimitiveMetadata({
+	    '__author__' : "DATA Lab @ Texas A&M University",
+	    'name': "Fast Fourier Transform",
+	    'python_path': 'd3m.primitives.tods.feature_analysis.non_negative_matrix_factorization',
+	    'source': {
+		'name': 'DATA Lab @ Texas A&M University',
 		'contact': 'mailto:khlai037@tamu.edu',
-		'uris': [
-			'https://gitlab.com/lhenry15/tods.git',
-			'https://gitlab.com/lhenry15/tods/-/blob/purav/anomaly-primitives/anomaly_primitives/NonNegativeMatrixFactorization.py',
-		],
-		},
-		'algorithm_types': [
-			metadata_base.PrimitiveAlgorithmType.NON_NEGATIVE_MATRIX_FACTORIZATION,
-		],
-		'primitive_family': metadata_base.PrimitiveFamily.FEATURE_CONSTRUCTION,
-		'id': 'c7259da6-7ce6-42ad-83c6-15238679f5fa',
-		'hyperparameters_to_tune':['rank','update','objective','max_iter','learning_rate'],
-		'version': '0.0.1',
-	},
-	)
+	    },
+	    'hyperparameters_to_tune':['rank','update','objective','max_iter','learning_rate'],
+	    'version': '0.0.1',
+	    'algorithm_types': [
+		metadata_base.PrimitiveAlgorithmType.TODS_PRIMITIVE,
+	    ],
+	    'primitive_family': metadata_base.PrimitiveFamily.FEATURE_CONSTRUCTION,
+	    'id': str(uuid.uuid3(uuid.NAMESPACE_DNS, 'NonNegativeMatrixFactorizationPrimitive')),
+	})
 
 	def __init__(self, *, hyperparams: Hyperparams) -> None:
 		super().__init__(hyperparams=hyperparams)
@@ -305,7 +300,7 @@ class NonNegativeMatrixFactorization(transformer.TransformerPrimitiveBase[Inputs
 						learning_rate = self.hyperparams['learning_rate'],
 						)
 
-	def produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> base.CallResult[Outputs]:
+	def _produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> base.CallResult[Outputs]:
 
 		assert isinstance(inputs, container.DataFrame), type(dataframe)
 
@@ -420,12 +415,12 @@ class NonNegativeMatrixFactorization(transformer.TransformerPrimitiveBase[Inputs
 		if len(accepted_semantic_types - semantic_types) == 0:
 			return True
 
-		print(semantic_types)
+		# print(semantic_types)
 		return False
 
 
 	@classmethod
-	def _get_target_columns_metadata(cls, outputs_metadata: metadata_base.DataMetadata, hyperparams) -> List[OrderedDict]:
+	def _get_target_columns_metadata(cls, outputs_metadata: metadata_base.DataMetadata, hyperparams) -> List[OrderedDict]: # pragma: no cover
 		"""
 		Output metadata of selected columns.
 		Args:
@@ -520,4 +515,4 @@ class NonNegativeMatrixFactorization(transformer.TransformerPrimitiveBase[Inputs
 			target_columns_metadata.append(column_metadata)
 		return target_columns_metadata
 
-NonNegativeMatrixFactorization.__doc__ = NonNegativeMatrixFactorization.__doc__
+NonNegativeMatrixFactorizationPrimitive.__doc__ = NonNegativeMatrixFactorizationPrimitive.__doc__

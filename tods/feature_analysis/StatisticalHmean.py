@@ -10,6 +10,7 @@ from collections import OrderedDict
 from scipy import sparse
 import os
 from scipy import stats
+import uuid
 
 import numpy
 import typing
@@ -23,6 +24,7 @@ from d3m.metadata import hyperparams, params, base as metadata_base
 
 from d3m.base import utils as base_utils
 from d3m.exceptions import PrimitiveNotFittedError
+from ..common.TODSBasePrimitives import TODSTransformerPrimitiveBase
 
 __all__ = ('StatisticalHmeanPrimitive',)
 
@@ -87,43 +89,32 @@ class Hyperparams(hyperparams.Hyperparams):
 
 
 
-class StatisticalHmeanPrimitive(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
+class StatisticalHmeanPrimitive(TODSTransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
     """
     Primitive to find Harmonic mean of time series
      Harmonic mean only defined if all elements greater than or equal to zero
     """
     __author__ = "DATA Lab at Texas A&M University",
-    metadata = metadata_base.PrimitiveMetadata(
-        {
-            'id': '7c4bf669-26f4-4756-8e00-c3e5e89fa43c',
-            'version': '0.1.0',
-            'name': 'Time Series Decompostional',
-            'python_path': 'd3m.primitives.tods.feature_analysis.statistical_h_mean',
-            'keywords': ['Time Series','Hmean'],
-            "hyperparams_to_tune": ['window_size'],
-            'source': {
-                'name': 'DATA Lab at Texas A&M University',
-                'uris': ['https://gitlab.com/lhenry15/tods.git','https://gitlab.com/lhenry15/tods/-/blob/devesh/tods/feature_analysis/StatisticalHmean.py'],
-                'contact': 'mailto:khlai037@tamu.edu'
+    metadata = metadata_base.PrimitiveMetadata({
+        "__author__": "DATA Lab @ Texas A&M University",
+        'name': 'Time Series Decompostional',
+        'python_path': 'd3m.primitives.tods.feature_analysis.statistical_h_mean',
+        'keywords': ['Time Series','Hmean'],
+        'source': {
+            'name': 'DATA Lab at Texas A&M University',
+            'contact': 'mailto:khlai037@tamu.edu'
 
-            },
-            'installation': [
-                {'type': metadata_base.PrimitiveInstallationType.PIP,
-                 'package_uri': 'git+https://gitlab.com/lhenry15/tods.git@{git_commit}#egg=TODS'.format(
-                     git_commit=d3m_utils.current_git_commit(os.path.dirname(__file__)),
-                 ),
-                 }
+        },
+        'version': '0.1.0',
+        "hyperparams_to_tune": ['window_size'],
+        'algorithm_types': [
+            metadata_base.PrimitiveAlgorithmType.TODS_PRIMITIVE,
+        ],
+        'primitive_family': metadata_base.PrimitiveFamily.FEATURE_CONSTRUCTION,
+	'id': str(uuid.uuid3(uuid.NAMESPACE_DNS, 'StatisticalHmeanPrimitive')),
+    })
 
-            ],
-            'algorithm_types': [
-                metadata_base.PrimitiveAlgorithmType.DATA_PROFILING,
-            ],
-            'primitive_family': metadata_base.PrimitiveFamily.FEATURE_CONSTRUCTION,
-
-        }
-    )
-
-    def produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> base.CallResult[Outputs]:
+    def _produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> base.CallResult[Outputs]:
         """
 
         Args:
@@ -144,7 +135,7 @@ class StatisticalHmeanPrimitive(transformer.TransformerPrimitiveBase[Inputs, Out
         if len(self._training_indices) > 0:
             # self._clf.fit(self._training_inputs)
             self._fitted = True
-        else:
+        else: # pragma: no cover
             if self.hyperparams['error_on_no_input']:
                 raise RuntimeError("No input columns were selected")
             self.logger.warn("No input columns were selected")
@@ -168,7 +159,7 @@ class StatisticalHmeanPrimitive(transformer.TransformerPrimitiveBase[Inputs, Out
             output_columns = [outputs]
 
 
-        else:
+        else: # pragma: no cover
             if self.hyperparams['error_on_no_input']:
                 raise RuntimeError("No input columns were selected")
             self.logger.warn("No input columns were selected")
@@ -304,7 +295,7 @@ class StatisticalHmeanPrimitive(transformer.TransformerPrimitiveBase[Inputs, Out
 
         return target_columns_metadata
 
-    def _write(self, inputs: Inputs):
+    def _write(self, inputs: Inputs): # pragma: no cover
         inputs.to_csv(str(time.time()) + '.csv')
 
 

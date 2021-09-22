@@ -1,6 +1,7 @@
 from typing import Any, Callable, List, Dict, Union, Optional, Sequence, Tuple
 from numpy import ndarray
 from collections import OrderedDict
+import uuid
 from scipy import sparse
 import os
 import sklearn
@@ -28,6 +29,8 @@ from d3m import container, utils as d3m_utils
 from d3m.metadata import base as metadata_base
 from d3m.metadata import hyperparams,params
 from d3m.primitive_interfaces import base, transformer
+
+__all__ = ('HoltSmoothingPrimitive',)
 
 Inputs = d3m_dataframe
 Outputs = d3m_dataframe
@@ -101,23 +104,28 @@ class Hyperparams(hyperparams.Hyperparams):
         semantic_types=['https://metadata.datadrivendiscovery.org/types/ControlParameter']
     )
 
-class HoltSmoothing(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, Hyperparams]):
+class HoltSmoothingPrimitive(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, Hyperparams]):
     """
     Holt Smoothing
     `statsmodels documentation <https://www.statsmodels.org/stable/generated/statsmodels.tsa.holtwinters.Holt.html#statsmodels.tsa.holtwinters.Holt>`_
     
     """
     
-    __author__ = "DATA Lab at Texas A&M University"
     metadata = metadata_base.PrimitiveMetadata({ 
-         "algorithm_types": [metadata_base.PrimitiveAlgorithmType.HOLT_SMOOTHING, ],
-         "name": "statsmodels.preprocessing.HoltSmoothing",
-         "primitive_family": metadata_base.PrimitiveFamily.DATA_PREPROCESSING,
-         "python_path": "d3m.primitives.tods.timeseries_processing.transformation.holt_smoothing",
-         "source": {'name': 'DATA Lab at Texas A&M University', 'contact': 'mailto:khlai037@tamu.edu', 'uris': ['https://gitlab.com/lhenry15/tods.git','https://gitlab.com/lhenry15/tods/-/blob/mia/anomaly-primitives/anomaly_primitives/HoltSmoothing.py']},
-         "version": "0.0.1",
-         "id": "3688b5b4-885c-40bb-9731-fe3969ea81b0",
-         "hyperparams_to_tune": ['endog','use_columns'],
+        "__author__": "DATA Lab @ Texas A&M University",
+        "name": "statsmodels.preprocessing.HoltSmoothing",
+        "python_path": "d3m.primitives.tods.timeseries_processing.transformation.holt_smoothing",
+        "source": {
+            'name': 'DATA Lab @ Texas A&M University', 
+            'contact': 'mailto:khlai037@tamu.edu', 
+        },
+        "version": "0.0.1",
+        "hyperparams_to_tune": ['endog','use_columns'],
+        "algorithm_types": [
+            metadata_base.PrimitiveAlgorithmType.TODS_PRIMITIVE, 
+        ],
+        "primitive_family": metadata_base.PrimitiveFamily.DATA_PREPROCESSING,
+	'id': str(uuid.uuid3(uuid.NAMESPACE_DNS, 'HoltSmoothingPrimitive')),
      })
 
     def __init__(self, *,
@@ -148,7 +156,7 @@ class HoltSmoothing(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, Hy
         self._inputs = inputs
         self._fitted = False
         
-    def fit(self, *, timeout: float = None, iterations: int = None)-> CallResult[None]:
+    def fit(self, *, timeout: float = None, iterations: int = None)-> CallResult[None]: # pragma: no cover
         if self._fitted:
             return CallResult(None)
 
@@ -167,7 +175,7 @@ class HoltSmoothing(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, Hy
             self.logger.warn("No input columns were selected")
         return CallResult(None)
         
-    def produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> base.CallResult[Outputs]:
+    def produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> base.CallResult[Outputs]: # pragma: no cover
 
         self.logger.info('Holt Smoothing Primitive called')
         outputs = inputs
@@ -189,10 +197,10 @@ class HoltSmoothing(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, Hy
 
         return base.CallResult(outputs) 
 
-    def _update_metadata(self, outputs):
+    def _update_metadata(self, outputs): # pragma: no cover
         outputs.metadata = outputs.metadata.generate(outputs,) 
 
-    def get_params(self) -> Params:
+    def get_params(self) -> Params: # pragma: no cover
         if not self._fitted:
             return Params(
                 input_column_names=self._input_column_names,
@@ -210,7 +218,7 @@ class HoltSmoothing(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, Hy
             target_columns_metadata_=self._target_columns_metadata
         )
 
-    def set_params(self, *, params: Params) -> None:
+    def set_params(self, *, params: Params) -> None: # pragma: no cover
         self._input_column_names = params['input_column_names']
         self._training_indices = params['training_indices_']
         self._target_names = params['target_names_']
@@ -223,7 +231,7 @@ class HoltSmoothing(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, Hy
     
     
     @classmethod
-    def _get_columns_to_fit(cls, inputs: Inputs, hyperparams: Hyperparams):
+    def _get_columns_to_fit(cls, inputs: Inputs, hyperparams: Hyperparams): # pragma: no cover
         if not hyperparams['use_semantic_types']:
             return inputs, list(range(len(inputs.columns)))
 
@@ -240,7 +248,7 @@ class HoltSmoothing(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, Hy
         # return columns_to_produce
 
     @classmethod
-    def _can_produce_column(cls, inputs_metadata: metadata_base.DataMetadata, column_index: int, hyperparams: Hyperparams) -> bool:
+    def _can_produce_column(cls, inputs_metadata: metadata_base.DataMetadata, column_index: int, hyperparams: Hyperparams) -> bool: # pragma: no cover
         column_metadata = inputs_metadata.query((metadata_base.ALL_ELEMENTS, column_index))
 
         accepted_structural_types = (int, float, numpy.integer, numpy.float64)
@@ -263,7 +271,7 @@ class HoltSmoothing(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, Hy
     
 
     @classmethod
-    def _get_target_columns_metadata(cls, outputs_metadata: metadata_base.DataMetadata, hyperparams) -> List[OrderedDict]:
+    def _get_target_columns_metadata(cls, outputs_metadata: metadata_base.DataMetadata, hyperparams) -> List[OrderedDict]: # pragma: no cover
         outputs_length = outputs_metadata.query((metadata_base.ALL_ELEMENTS,))['dimension']['length']
 
         target_columns_metadata: List[OrderedDict] = []
@@ -285,7 +293,7 @@ class HoltSmoothing(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, Hy
     
     @classmethod
     def _update_predictions_metadata(cls, inputs_metadata: metadata_base.DataMetadata, outputs: Optional[Outputs],
-                                     target_columns_metadata: List[OrderedDict]) -> metadata_base.DataMetadata:
+                                     target_columns_metadata: List[OrderedDict]) -> metadata_base.DataMetadata: # pragma: no cover
         outputs_metadata = metadata_base.DataMetadata().generate(value=outputs)
 
         for column_index, column_metadata in enumerate(target_columns_metadata):
@@ -294,7 +302,7 @@ class HoltSmoothing(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, Hy
 
         return outputs_metadata
 
-    def _wrap_predictions(self, inputs: Inputs, predictions: ndarray) -> Outputs:
+    def _wrap_predictions(self, inputs: Inputs, predictions: ndarray) -> Outputs: # pragma: no cover
         outputs = d3m_dataframe(predictions, generate_metadata=True)
         target_columns_metadata = self._copy_inputs_metadata(inputs.metadata, self._training_indices, outputs.metadata, self.hyperparams)
         outputs.metadata = self._update_predictions_metadata(inputs.metadata, outputs, target_columns_metadata)
@@ -303,7 +311,7 @@ class HoltSmoothing(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, Hy
 
     @classmethod
     def _copy_inputs_metadata(cls, inputs_metadata: metadata_base.DataMetadata, input_indices: List[int],
-                                        outputs_metadata: metadata_base.DataMetadata, hyperparams):
+                                        outputs_metadata: metadata_base.DataMetadata, hyperparams): # pragma: no cover
         outputs_length = outputs_metadata.query((metadata_base.ALL_ELEMENTS,))['dimension']['length']
         target_columns_metadata: List[OrderedDict] = []
         for column_index in input_indices:
@@ -337,4 +345,4 @@ class HoltSmoothing(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, Hy
         return target_columns_metadata
 
 
-HoltSmoothing.__doc__ = Normalizer.__doc__
+HoltSmoothingPrimitive.__doc__ = Normalizer.__doc__

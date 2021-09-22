@@ -7,6 +7,7 @@ import sklearn
 import numpy
 import typing
 import time
+import uuid
 
 # Custom import commands if any
 from sklearn.decomposition.truncated_svd import TruncatedSVD
@@ -25,7 +26,7 @@ from d3m.primitive_interfaces.unsupervised_learning import UnsupervisedLearnerPr
 Inputs = d3m_dataframe
 Outputs = d3m_dataframe
 
-__all__ = ('SKTruncatedSVD',)
+__all__ = ('SKTruncatedSVDPrimitive',)
 
 class PrimitiveCount:
     primitive_no = 0
@@ -121,7 +122,7 @@ class Hyperparams(hyperparams.Hyperparams):
         semantic_types=['https://metadata.datadrivendiscovery.org/types/ControlParameter']
     )
 
-class SKTruncatedSVD(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, Hyperparams]):
+class SKTruncatedSVDPrimitive(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, Hyperparams]):
     """
     Primitive wrapping for sklearn TruncatedSVD
     `sklearn documentation <https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.TruncatedSVD.html>`_   
@@ -156,17 +157,21 @@ class SKTruncatedSVD(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, H
         Decides what semantic type to attach to generated attributes'
     """    
 
-    __author__: "DATA Lab at Texas A&M University"
     metadata = metadata_base.PrimitiveMetadata({
-         "name": "Truncated SVD",
-         "python_path": "d3m.primitives.tods.feature_analysis.truncated_svd",
-         "source": {'name': 'DATA Lab at Texas A&M University', 'contact': 'mailto:khlai037@tamu.edu', 
-         'uris': ['https://gitlab.com/lhenry15/tods.git', 'https://gitlab.com/lhenry15/tods/-/blob/Junjie/anomaly-primitives/anomaly_primitives/SKTruncatedSVD.py']},
-         "algorithm_types": [metadata_base.PrimitiveAlgorithmType.SINGULAR_VALUE_DECOMPOSITION, ],
-         "primitive_family": metadata_base.PrimitiveFamily.FEATURE_CONSTRUCTION,
-         "id": "9231fde3-7322-3c41-b4cf-d00a93558c44",
-         "hyperparams_to_tune": ['n_components', 'algorithm', 'use_columns', 'exclude_columns', 'return_result', 'use_semantic_types', 'add_index_columns', 'error_on_no_input', 'return_semantic_type'],
-         "version": "0.0.1",
+        "__author__": "DATA Lab at Texas A&M University",
+        "name": "Truncated SVD",
+        "python_path": "d3m.primitives.tods.feature_analysis.truncated_svd",
+        "source": {
+            'name': 'DATA Lab at Texas A&M University', 
+            'contact': 'mailto:khlai037@tamu.edu', 
+        },
+        "hyperparams_to_tune": ['n_components', 'algorithm', 'use_columns', 'exclude_columns', 'return_result', 'use_semantic_types', 'add_index_columns', 'error_on_no_input', 'return_semantic_type'],
+        "version": "0.0.1",
+        "algorithm_types": [
+            metadata_base.PrimitiveAlgorithmType.TODS_PRIMITIVE, 
+        ],
+        "primitive_family": metadata_base.PrimitiveFamily.FEATURE_CONSTRUCTION,
+	'id': str(uuid.uuid3(uuid.NAMESPACE_DNS, 'SKTruncatedSVDPrimitive')),
     })
 
     def __init__(self, *,
@@ -224,7 +229,7 @@ class SKTruncatedSVD(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, H
         Returns:
             None
         """
-        if self._fitted:
+        if self._fitted: # pragma: no cover
             return CallResult(None)
 
         # Get cols to fit.
@@ -239,7 +244,7 @@ class SKTruncatedSVD(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, H
         if len(self._training_indices) > 0:
             self._clf.fit(self._training_inputs)
             self._fitted = True
-        else:
+        else: # pragma: no cover
             if self.hyperparams['error_on_no_input']:
                 raise RuntimeError("No input columns were selected")
             self.logger.warn("No input columns were selected")
@@ -257,7 +262,7 @@ class SKTruncatedSVD(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, H
         # self.logger.warning(str(self.metadata.query()['name']))
 
 
-        if not self._fitted:
+        if not self._fitted: # pragma: no cover
             raise PrimitiveNotFittedError("Primitive not fitted.")
         sk_inputs = inputs
         if self.hyperparams['use_semantic_types']:
@@ -272,7 +277,7 @@ class SKTruncatedSVD(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, H
             if len(outputs.columns) == len(self._input_column_names):
                 outputs.columns = self._input_column_names
             output_columns = [outputs]
-        else:
+        else: # pragma: no cover
             if self.hyperparams['error_on_no_input']:
                 raise RuntimeError("No input columns were selected")
             self.logger.warn("No input columns were selected")
@@ -286,7 +291,7 @@ class SKTruncatedSVD(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, H
         return CallResult(outputs)
         
 
-    def get_params(self) -> Params:
+    def get_params(self) -> Params: # pragma: no cover
         """
         Return parameters.
         Args:
@@ -320,7 +325,7 @@ class SKTruncatedSVD(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, H
             target_columns_metadata_=self._target_columns_metadata
         )
 
-    def set_params(self, *, params: Params) -> None:
+    def set_params(self, *, params: Params) -> None: # pragma: no cover
         """
         Set parameters for SKTruncatedSVD.
         Args:
@@ -351,7 +356,7 @@ class SKTruncatedSVD(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, H
    
     
     @classmethod
-    def _get_columns_to_fit(cls, inputs: Inputs, hyperparams: Hyperparams):
+    def _get_columns_to_fit(cls, inputs: Inputs, hyperparams: Hyperparams): # pragma: no cover
         """
         Select columns to fit.
         Args:
@@ -377,7 +382,7 @@ class SKTruncatedSVD(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, H
         # return columns_to_produce
 
     @classmethod
-    def _can_produce_column(cls, inputs_metadata: metadata_base.DataMetadata, column_index: int, hyperparams: Hyperparams) -> bool:
+    def _can_produce_column(cls, inputs_metadata: metadata_base.DataMetadata, column_index: int, hyperparams: Hyperparams) -> bool: # pragma: no cover
         """
         Output whether a column can be processed.
         Args:
@@ -408,35 +413,35 @@ class SKTruncatedSVD(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, H
         return False
     
 
-    @classmethod
-    def _get_target_columns_metadata(cls, outputs_metadata: metadata_base.DataMetadata, hyperparams) -> List[OrderedDict]:
-        """
-        Output metadata of selected columns.
-        Args:
-            outputs_metadata: metadata_base.DataMetadata
-            hyperparams: d3m.metadata.hyperparams.Hyperparams
+    # @classmethod
+    # def _get_target_columns_metadata(cls, outputs_metadata: metadata_base.DataMetadata, hyperparams) -> List[OrderedDict]:
+    #     """
+    #     Output metadata of selected columns.
+    #     Args:
+    #         outputs_metadata: metadata_base.DataMetadata
+    #         hyperparams: d3m.metadata.hyperparams.Hyperparams
 
-        Returns:
-            d3m.metadata.base.DataMetadata
-        """
-        outputs_length = outputs_metadata.query((metadata_base.ALL_ELEMENTS,))['dimension']['length']
+    #     Returns:
+    #         d3m.metadata.base.DataMetadata
+    #     """
+    #     outputs_length = outputs_metadata.query((metadata_base.ALL_ELEMENTS,))['dimension']['length']
 
-        target_columns_metadata: List[OrderedDict] = []
-        for column_index in range(outputs_length):
-            column_metadata = OrderedDict(outputs_metadata.query_column(column_index))
+    #     target_columns_metadata: List[OrderedDict] = []
+    #     for column_index in range(outputs_length):
+    #         column_metadata = OrderedDict(outputs_metadata.query_column(column_index))
 
-            # Update semantic types and prepare it for predicted targets.
-            semantic_types = set(column_metadata.get('semantic_types', []))
-            semantic_types_to_remove = set([])
-            add_semantic_types = []
-            add_semantic_types.add(hyperparams["return_semantic_type"])
-            semantic_types = semantic_types - semantic_types_to_remove
-            semantic_types = semantic_types.union(add_semantic_types)
-            column_metadata['semantic_types'] = list(semantic_types)
+    #         # Update semantic types and prepare it for predicted targets.
+    #         semantic_types = set(column_metadata.get('semantic_types', []))
+    #         semantic_types_to_remove = set([])
+    #         add_semantic_types = []
+    #         add_semantic_types.add(hyperparams["return_semantic_type"])
+    #         semantic_types = semantic_types - semantic_types_to_remove
+    #         semantic_types = semantic_types.union(add_semantic_types)
+    #         column_metadata['semantic_types'] = list(semantic_types)
 
-            target_columns_metadata.append(column_metadata)
+    #         target_columns_metadata.append(column_metadata)
 
-        return target_columns_metadata
+    #     return target_columns_metadata
     
     @classmethod
     def _update_predictions_metadata(cls, inputs_metadata: metadata_base.DataMetadata, outputs: Optional[Outputs],
@@ -500,11 +505,3 @@ class SKTruncatedSVD(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, H
 
         return target_columns_metadata
 
-    def _write(self, inputs:Inputs):
-        """
-        write inputs to current directory, only for test
-        """
-        inputs.to_csv(str(time.time())+'.csv')
-
-
-# SKTruncatedSVD.__doc__ = TruncatedSVD.__doc__

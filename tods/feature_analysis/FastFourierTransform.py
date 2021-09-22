@@ -7,8 +7,8 @@ from d3m import container, utils
 from d3m.base import utils as base_utils
 from d3m.metadata import base as metadata_base, hyperparams
 from d3m.primitive_interfaces import base, transformer
+import uuid
 
-import common_primitives
 import logging
 from cmath import polar
 from scipy.fft import fft
@@ -17,8 +17,9 @@ from typing import cast, Dict, List, Union, Sequence, Optional, Tuple
 
 from scipy import sparse
 from numpy import ndarray
+from ..common.TODSBasePrimitives import TODSTransformerPrimitiveBase
 
-__all__ = ('FastFourierTransform',)
+__all__ = ('FastFourierTransformPrimitive',)
 
 Inputs = container.DataFrame
 Outputs = container.DataFrame
@@ -157,7 +158,7 @@ class FFT:
 
         
 
-class FastFourierTransform(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
+class FastFourierTransformPrimitive(TODSTransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
     """
     Compute the 1-D discrete Fourier Transform.
     This function computes the 1-D n-point discrete Fourier Transform (DFT) with the efficient Fast Fourier Transform (FFT) algorithm
@@ -205,29 +206,22 @@ class FastFourierTransform(transformer.TransformerPrimitiveBase[Inputs, Outputs,
         Decides what semantic type to attach to generated attributes'
     """
     
-    __author__ = "Data Lab"
-    metadata = metadata_base.PrimitiveMetadata(
-    {
-        '__author__' : "DATA Lab at Texas A&M University",
+    metadata = metadata_base.PrimitiveMetadata({
+        '__author__' : "DATA Lab @ Texas A&M University",
         'name': "Fast Fourier Transform",
         'python_path': 'd3m.primitives.tods.feature_analysis.fast_fourier_transform',
         'source': {
-            'name': 'DATA Lab at Texas A&M University',
+            'name': 'DATA Lab @ Texas A&M University',
             'contact': 'mailto:khlai037@tamu.edu',
-            'uris': [
-                'https://gitlab.com/lhenry15/tods.git',
-                'https://gitlab.com/lhenry15/tods/-/blob/purav/anomaly-primitives/anomaly_primitives/FastFourierTransform.py',
-            ],
         },
-        'algorithm_types': [
-            metadata_base.PrimitiveAlgorithmType.FAST_FOURIER_TRANSFORM,
-        ],
-        'primitive_family': metadata_base.PrimitiveFamily.FEATURE_CONSTRUCTION,
-        'id': '7bd269bc-de7e-47b8-8d6c-0bd46594d3cb',
         'hyperparameters_to_tune':['n','norm','axis'],
         'version': '0.0.1',
-    },
-    )
+        'algorithm_types': [
+            metadata_base.PrimitiveAlgorithmType.TODS_PRIMITIVE,
+        ],
+        'primitive_family': metadata_base.PrimitiveFamily.FEATURE_CONSTRUCTION,
+	 'id': str(uuid.uuid3(uuid.NAMESPACE_DNS, 'FastFourierTransformPrimitive')),
+    })
 
     def __init__(self, *, hyperparams: Hyperparams) -> None:
         super().__init__(hyperparams=hyperparams)
@@ -239,7 +233,7 @@ class FastFourierTransform(transformer.TransformerPrimitiveBase[Inputs, Outputs,
                         workers = self.hyperparams['workers']
                         )
 
-    def produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> base.CallResult[Outputs]:
+    def _produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> base.CallResult[Outputs]:
         """
 
             Args:
@@ -363,12 +357,12 @@ class FastFourierTransform(transformer.TransformerPrimitiveBase[Inputs, Outputs,
         if len(accepted_semantic_types - semantic_types) == 0:
             return True
 
-        print(semantic_types)
+        # print(semantic_types)
         return False
 
 
     @classmethod
-    def _get_target_columns_metadata(cls, outputs_metadata: metadata_base.DataMetadata, hyperparams) -> List[OrderedDict]:
+    def _get_target_columns_metadata(cls, outputs_metadata: metadata_base.DataMetadata, hyperparams) -> List[OrderedDict]: # pragma: no cover
         """
         Output metadata of selected columns.
         Args:
@@ -464,7 +458,7 @@ class FastFourierTransform(transformer.TransformerPrimitiveBase[Inputs, Outputs,
         return target_columns_metadata
 
 
-FastFourierTransform.__doc__ = FastFourierTransform.__doc__
+FastFourierTransformPrimitive.__doc__ = FastFourierTransformPrimitive.__doc__
 
 
 

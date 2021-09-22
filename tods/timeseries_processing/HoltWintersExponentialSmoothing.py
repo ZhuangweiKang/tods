@@ -5,6 +5,7 @@ from scipy import sparse
 import os
 import sklearn
 import numpy
+import uuid
 import typing
 import pandas as pd
 # Custom import commands if any
@@ -28,6 +29,8 @@ from d3m import container, utils as d3m_utils
 from d3m.metadata import base as metadata_base
 from d3m.metadata import hyperparams,params
 from d3m.primitive_interfaces import base, transformer
+
+__all__ = ('HoltWintersExponentialSmoothingPrimitive',)
 
 Inputs = d3m_dataframe
 Outputs = d3m_dataframe
@@ -100,23 +103,27 @@ class Hyperparams(hyperparams.Hyperparams):
         semantic_types=['https://metadata.datadrivendiscovery.org/types/ControlParameter']
     )
 
-class HoltWintersExponentialSmoothing(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, Hyperparams]):
+class HoltWintersExponentialSmoothingPrimitive(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, Hyperparams]):
     """
     HoltWinter Exponential Smoothing
     `Statsmodels documentation <https://www.statsmodels.org/stable/generated/statsmodels.tsa.holtwinters.ExponentialSmoothing.html#statsmodels.tsa.holtwinters.ExponentialSmoothing>`_
     
     """
     
-    __author__ = "DATA Lab at Texas A&M University"
     metadata = metadata_base.PrimitiveMetadata({ 
-         "algorithm_types": [metadata_base.PrimitiveAlgorithmType.HOLT_WINTERS_EXPONENTIAL_SMOOTHING, ],
+         "__author__": "DATA Lab at Texas A&M University",
          "name": "statsmodels.preprocessing.data.HoltWintersExponentialSmoothing",
-         "primitive_family": metadata_base.PrimitiveFamily.DATA_PREPROCESSING,
-         #3"python_path": "d3m.primitives.tods.timeseries_processing.transformation.holt_winters_exponential_smoothing.Preprocessing",
          "python_path": "d3m.primitives.tods.timeseries_processing.transformation.holt_winters_exponential_smoothing",
-         "source": {'name': 'DATA Lab at Texas A&M University', 'contact': 'mailto:khlai037@tamu.edu', 'uris': ['https://gitlab.com/lhenry15/tods.git', 'https://gitlab.com/lhenry15/tods/-/blob/mia/anomaly-primitives/anomaly_primitives/HoltWintersExponentialSmoothing.py']},
+         "source": {
+             'name': 'DATA Lab at Texas A&M University', 
+             'contact': 'mailto:khlai037@tamu.edu', 
+         },
+         "algorithm_types": [
+             metadata_base.PrimitiveAlgorithmType.TODS_PRIMITIVE, 
+         ],
+         "primitive_family": metadata_base.PrimitiveFamily.DATA_PREPROCESSING,
          "version": "0.0.1",
-         "id": "b8c6647c-3787-4efd-bf01-b0ca11c643c6",
+	 'id': str(uuid.uuid3(uuid.NAMESPACE_DNS, 'HoltWintersExponentialSmoothingPrimitive')),
          "hyperparams_to_tune": ['endog','use_columns'],
          })
 
@@ -148,7 +155,7 @@ class HoltWintersExponentialSmoothing(UnsupervisedLearnerPrimitiveBase[Inputs, O
         self._inputs = inputs
         self._fitted = False
         
-    def fit(self, *, timeout: float = None, iterations: int = None)-> CallResult[None]:
+    def fit(self, *, timeout: float = None, iterations: int = None)-> CallResult[None]: # pragma: no cover
         if self._fitted:
             return CallResult(None)
 
@@ -167,7 +174,7 @@ class HoltWintersExponentialSmoothing(UnsupervisedLearnerPrimitiveBase[Inputs, O
             self.logger.warn("No input columns were selected")
         return CallResult(None)
         
-    def produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> base.CallResult[Outputs]:
+    def produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> base.CallResult[Outputs]: # pragma: no cover
 
         self.logger.info('Holt Winters Smoothing Primitive called')
         outputs = inputs
@@ -221,7 +228,7 @@ class HoltWintersExponentialSmoothing(UnsupervisedLearnerPrimitiveBase[Inputs, O
     
     
     @classmethod
-    def _get_columns_to_fit(cls, inputs: Inputs, hyperparams: Hyperparams):
+    def _get_columns_to_fit(cls, inputs: Inputs, hyperparams: Hyperparams): # pragma: no cover
         if not hyperparams['use_semantic_types']:
             return inputs, list(range(len(inputs.columns)))
 
@@ -238,7 +245,7 @@ class HoltWintersExponentialSmoothing(UnsupervisedLearnerPrimitiveBase[Inputs, O
         # return columns_to_produce
 
     @classmethod
-    def _can_produce_column(cls, inputs_metadata: metadata_base.DataMetadata, column_index: int, hyperparams: Hyperparams) -> bool:
+    def _can_produce_column(cls, inputs_metadata: metadata_base.DataMetadata, column_index: int, hyperparams: Hyperparams) -> bool: # pragma: no cover
         column_metadata = inputs_metadata.query((metadata_base.ALL_ELEMENTS, column_index))
 
         accepted_structural_types = (int, float, numpy.integer, numpy.float64)
@@ -261,7 +268,7 @@ class HoltWintersExponentialSmoothing(UnsupervisedLearnerPrimitiveBase[Inputs, O
     
 
     @classmethod
-    def _get_target_columns_metadata(cls, outputs_metadata: metadata_base.DataMetadata, hyperparams) -> List[OrderedDict]:
+    def _get_target_columns_metadata(cls, outputs_metadata: metadata_base.DataMetadata, hyperparams) -> List[OrderedDict]: # pragma: no cover
         outputs_length = outputs_metadata.query((metadata_base.ALL_ELEMENTS,))['dimension']['length']
 
         target_columns_metadata: List[OrderedDict] = []
@@ -283,7 +290,7 @@ class HoltWintersExponentialSmoothing(UnsupervisedLearnerPrimitiveBase[Inputs, O
     
     @classmethod
     def _update_predictions_metadata(cls, inputs_metadata: metadata_base.DataMetadata, outputs: Optional[Outputs],
-                                     target_columns_metadata: List[OrderedDict]) -> metadata_base.DataMetadata:
+                                     target_columns_metadata: List[OrderedDict]) -> metadata_base.DataMetadata: # pragma: no cover
         outputs_metadata = metadata_base.DataMetadata().generate(value=outputs)
 
         for column_index, column_metadata in enumerate(target_columns_metadata):
@@ -292,7 +299,7 @@ class HoltWintersExponentialSmoothing(UnsupervisedLearnerPrimitiveBase[Inputs, O
 
         return outputs_metadata
 
-    def _wrap_predictions(self, inputs: Inputs, predictions: ndarray) -> Outputs:
+    def _wrap_predictions(self, inputs: Inputs, predictions: ndarray) -> Outputs: # pragma: no cover
         outputs = d3m_dataframe(predictions, generate_metadata=True)
         target_columns_metadata = self._copy_inputs_metadata(inputs.metadata, self._training_indices, outputs.metadata, self.hyperparams)
         outputs.metadata = self._update_predictions_metadata(inputs.metadata, outputs, target_columns_metadata)
@@ -301,7 +308,7 @@ class HoltWintersExponentialSmoothing(UnsupervisedLearnerPrimitiveBase[Inputs, O
 
     @classmethod
     def _copy_inputs_metadata(cls, inputs_metadata: metadata_base.DataMetadata, input_indices: List[int],
-                                        outputs_metadata: metadata_base.DataMetadata, hyperparams):
+                                        outputs_metadata: metadata_base.DataMetadata, hyperparams): # pragma: no cover
         outputs_length = outputs_metadata.query((metadata_base.ALL_ELEMENTS,))['dimension']['length']
         target_columns_metadata: List[OrderedDict] = []
         for column_index in input_indices:
@@ -335,4 +342,4 @@ class HoltWintersExponentialSmoothing(UnsupervisedLearnerPrimitiveBase[Inputs, O
         return target_columns_metadata
 
 
-HoltWintersExponentialSmoothing.__doc__ = Normalizer.__doc__
+HoltWintersExponentialSmoothingPrimitive.__doc__ = Normalizer.__doc__

@@ -1,13 +1,14 @@
 from d3m import container, exceptions
 from d3m.primitive_interfaces import base, transformer
 from d3m.metadata import base as metadata_base, hyperparams
+import uuid
 
 import os.path
 from d3m import utils
 
 import time
 
-__all__ = ('ContinuityValidation',)
+__all__ = ('ContinuityValidationPrimitive',)
 
 Inputs = container.DataFrame
 Outputs = container.DataFrame
@@ -30,7 +31,7 @@ class Hyperparams(hyperparams.Hyperparams):
     )
 
 
-class ContinuityValidation(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
+class ContinuityValidationPrimitive(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
     """
     Check whether the seires data is consitent in time interval and provide processing if not consistent.
 
@@ -48,13 +49,17 @@ class ContinuityValidation(transformer.TransformerPrimitiveBase[Inputs, Outputs,
     metadata = metadata_base.PrimitiveMetadata({
          "name": "continuity validation primitive",
          "python_path": "d3m.primitives.tods.data_processing.continuity_validation",
-         "source": {'name': 'DATA Lab at Texas A&M University', 'contact': 'mailto:khlai037@tamu.edu', 
-         'uris': ['https://gitlab.com/lhenry15/tods.git', 'https://gitlab.com/lhenry15/tods/-/blob/Junjie/anomaly-primitives/anomaly_primitives/ContinuityValidation.py']},
-         "algorithm_types": [metadata_base.PrimitiveAlgorithmType.CONTINUITY_VALIDATION, ],
+         "source": {
+             'name': 'DATA Lab at Texas A&M University', 
+             'contact': 'mailto:khlai037@tamu.edu', 
+         },
+         "algorithm_types": [
+             metadata_base.PrimitiveAlgorithmType.TODS_PRIMITIVE, 
+         ],
          "primitive_family": metadata_base.PrimitiveFamily.DATA_PREPROCESSING,
-         "id": "ef8fb025-d157-476c-8e2e-f8fe56162195",
          "hyperparams_to_tune": ['continuity_option', 'interval'],
          "version": "0.0.1",
+	 'id': str(uuid.uuid3(uuid.NAMESPACE_DNS, 'ContinuityValidationPrimitive')),
     })
 
     def produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> base.CallResult[Outputs]:
@@ -170,9 +175,3 @@ class ContinuityValidation(transformer.TransformerPrimitiveBase[Inputs, Outputs,
         inputs['d3mIndex'] = list(range(inputs.shape[0]))
         return inputs
 
-
-    def _write(self, inputs:Inputs):
-        """
-        write inputs to current directory, only for test
-        """
-        inputs.to_csv(str(time.time())+'.csv')

@@ -33,7 +33,7 @@ Inputs = d3m_dataframe
 # Inputs = container.Dataset
 Outputs = d3m_dataframe
 
-__all__ = ('SKStandardScaler',)
+__all__ = ('SKStandardScalerPrimitive',)
 
 
 class Params(params.Params):
@@ -114,7 +114,7 @@ class Hyperparams(hyperparams.Hyperparams):
     )
 
 
-class SKStandardScaler(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, Hyperparams]):
+class SKStandardScalerPrimitive(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params, Hyperparams]):
     """
     Standardize features by removing the mean and scaling to unit variance.
     See `sklearn documentation <https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html?highlight=standardscaler#sklearn.preprocessing.StandardScaler>`_ for more details.
@@ -142,15 +142,19 @@ class SKStandardScaler(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params,
         The number of samples processed by the estimator for each feature. If there are not missing samples, the n_samples_seen will be an integer, otherwise it will be an array. Will be reset on new calls to fit, but increments across partial_fit calls.
     """
     
-    __author__ = "DATALAB @Taxes A&M University"
     metadata = metadata_base.PrimitiveMetadata({
-        "algorithm_types": [metadata_base.PrimitiveAlgorithmType.DATA_CONVERSION, ],
+        "__author__": "DATA Lab @Taxes A&M University",
         "name": "Standard_scaler",
-        "primitive_family": metadata_base.PrimitiveFamily.DATA_TRANSFORMATION,
         "python_path": "d3m.primitives.tods.timeseries_processing.transformation.standard_scaler",
+        "source": {
+            'name': "DATA Lab @ Taxes A&M University", 
+            'contact': 'mailto:khlai037@tamu.edu',
+        },
         "hyperparams_to_tune": ['with_mean', 'with_std'],
-        "source": {'name': "DATALAB @Taxes A&M University", 'contact': 'mailto:khlai037@tamu.edu',
-                    'uris': ['https://gitlab.com/lhenry15/tods.git']},
+        "algorithm_types": [
+            metadata_base.PrimitiveAlgorithmType.TODS_PRIMITIVE, 
+        ],
+        "primitive_family": metadata_base.PrimitiveFamily.DATA_TRANSFORMATION,
         "version": "0.0.1",
         "id": str(uuid.uuid3(uuid.NAMESPACE_DNS, 'SKStandardScaler')),
     })
@@ -209,19 +213,19 @@ class SKStandardScaler(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params,
             None
         """
 
-        if self._fitted:
+        if self._fitted: # pragma: no cover
             return CallResult(None)
 
         self._training_inputs, self._training_indices = self._get_columns_to_fit(self._inputs, self.hyperparams)
         self._input_column_names = self._training_inputs.columns
 
-        if self._training_inputs is None:
+        if self._training_inputs is None: # pragma: no cover
             return CallResult(None)
 
         if len(self._training_indices) > 0:
             self._clf.fit_transform(self._training_inputs)
             self._fitted = True
-        else:
+        else: # pragma: no cover
             if self.hyperparams['error_on_no_input']:
                 raise RuntimeError("No input columns were selected")
             self.logger.warn("No input columns were selected")
@@ -244,18 +248,18 @@ class SKStandardScaler(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params,
         if not self._fitted:
             raise PrimitiveNotFittedError("Primitive not fitted.")
         sk_inputs = inputs
-        if self.hyperparams['use_semantic_types']:
+        if self.hyperparams['use_semantic_types']: # pragma: no cover
             sk_inputs = inputs.iloc[:, self._training_indices]
         output_columns = []
         if len(self._training_indices) > 0:
             sk_output = self._clf.transform(sk_inputs)
-            if sparse.issparse(sk_output):
+            if sparse.issparse(sk_output): # pragma: no cover
                 sk_output = sk_output.toarray()
             outputs = self._wrap_predictions(inputs, sk_output)
             if len(outputs.columns) == len(self._input_column_names):
                 outputs.columns = self._input_column_names
             output_columns = [outputs]
-        else:
+        else: # pragma: no cover
             if self.hyperparams['error_on_no_input']:
                 raise RuntimeError("No input columns were selected")
             self.logger.warn("No input columns were selected")
@@ -349,7 +353,7 @@ class SKStandardScaler(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params,
 
 
     @classmethod
-    def _get_columns_to_fit(cls, inputs: Inputs, hyperparams: Hyperparams):
+    def _get_columns_to_fit(cls, inputs: Inputs, hyperparams: Hyperparams): # pragma: no cover
 
         """
         Select columns to fit.
@@ -381,7 +385,7 @@ class SKStandardScaler(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params,
 
     @classmethod
     def _can_produce_column(cls, inputs_metadata: metadata_base.DataMetadata, column_index: int,
-                            hyperparams: Hyperparams) -> bool:
+                            hyperparams: Hyperparams) -> bool: # pragma: no cover
         """
         Output whether a column can be processed.
         Args:
@@ -416,7 +420,7 @@ class SKStandardScaler(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params,
 
 
     @classmethod
-    def _get_target_columns_metadata(cls, outputs_metadata: metadata_base.DataMetadata, hyperparams) -> List[OrderedDict]:
+    def _get_target_columns_metadata(cls, outputs_metadata: metadata_base.DataMetadata, hyperparams) -> List[OrderedDict]: # pragma: no cover
 
         """
         Output metadata of selected columns.
@@ -450,7 +454,7 @@ class SKStandardScaler(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params,
 
     @classmethod
     def _update_predictions_metadata(cls, inputs_metadata: metadata_base.DataMetadata, outputs: Optional[Outputs],
-                                     target_columns_metadata: List[OrderedDict]) -> metadata_base.DataMetadata:
+                                     target_columns_metadata: List[OrderedDict]) -> metadata_base.DataMetadata: # pragma: no cover
 
         """
         Updata metadata for selected columns.
@@ -472,7 +476,7 @@ class SKStandardScaler(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params,
         return outputs_metadata
 
 
-    def _wrap_predictions(self, inputs: Inputs, predictions: ndarray) -> Outputs:
+    def _wrap_predictions(self, inputs: Inputs, predictions: ndarray) -> Outputs: # pragma: no cover
 
         """
         Wrap predictions into dataframe
@@ -495,7 +499,7 @@ class SKStandardScaler(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params,
 
     @classmethod
     def _copy_inputs_metadata(cls, inputs_metadata: metadata_base.DataMetadata, input_indices: List[int],
-                              outputs_metadata: metadata_base.DataMetadata, hyperparams):
+                              outputs_metadata: metadata_base.DataMetadata, hyperparams): # pragma: no cover
 
         """
         Updata metadata for selected columns.
@@ -542,4 +546,4 @@ class SKStandardScaler(UnsupervisedLearnerPrimitiveBase[Inputs, Outputs, Params,
         return target_columns_metadata
 
 
-SKStandardScaler.__doc__ = SKStandardScaler.__doc__
+SKStandardScalerPrimitive.__doc__ = SKStandardScalerPrimitive.__doc__

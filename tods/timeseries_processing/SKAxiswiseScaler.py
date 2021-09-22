@@ -9,7 +9,6 @@ from d3m.primitive_interfaces import base, transformer
 
 from sklearn.preprocessing import scale
 
-import common_primitives
 import numpy
 from typing import Optional, List
 from collections import OrderedDict
@@ -17,7 +16,7 @@ from scipy import sparse
 import logging
 import uuid
 
-__all__ = ('SKAxiswiseScaler',)
+__all__ = ('SKAxiswiseScalerPrimitive',)
 
 Inputs = container.DataFrame
 Outputs = container.DataFrame
@@ -122,7 +121,7 @@ class Scaler:
 
 
 
-class SKAxiswiseScaler(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
+class SKAxiswiseScalerPrimitive(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
     """
     Standardize a dataset along any axis, and center to the mean and component wise scale to unit variance.
     See `sklearn documentation <https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.scale.html?highlight=scale#sklearn.preprocessing.scale>`_ for more details.
@@ -139,17 +138,21 @@ class SKAxiswiseScaler(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyp
         If True, scale the data to unit variance (or equivalently, unit standard deviation).
     """
 
-    __author__ = "DATALAB @Taxes A&M University"
     metadata = metadata_base.PrimitiveMetadata({
-        "algorithm_types": [metadata_base.PrimitiveAlgorithmType.DATA_MAPPING, ],
+        "__author__": "DATA Lab @ Taxes A&M University",
         "name": "Axis_wise_scale",
-        "primitive_family": metadata_base.PrimitiveFamily.DATA_TRANSFORMATION,
         "python_path": "d3m.primitives.tods.timeseries_processing.transformation.axiswise_scaler",
         "hyperparams_to_tune": ['with_mean', 'with_std', 'axis'],
-        "source": {'name': "DATALAB @Taxes A&M University", 'contact': 'mailto:khlai037@tamu.edu',
-                   'uris': ['https://gitlab.com/lhenry15/tods.git']},
-        "version": "0.0.1",
+        "source": {
+            'name': "DATA Lab @Taxes A&M University", 
+            'contact': 'mailto:khlai037@tamu.edu',
+        },
+        "algorithm_types": [
+            metadata_base.PrimitiveAlgorithmType.TODS_PRIMITIVE, 
+        ],
+        "primitive_family": metadata_base.PrimitiveFamily.DATA_TRANSFORMATION,
         "id": str(uuid.uuid3(uuid.NAMESPACE_DNS, 'SKAxiswiseScaler')),
+        "version": "0.0.1",
     })
 
     def __init__(self, *, hyperparams: Hyperparams) -> None:
@@ -179,18 +182,18 @@ class SKAxiswiseScaler(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyp
         self._input_column_names = inputs.columns
         # print(self._columns_to_produce)
         sk_inputs = inputs
-        if self.hyperparams['use_semantic_types']:
+        if self.hyperparams['use_semantic_types']: # pragma: no cover
             sk_inputs = inputs.iloc[:, self._columns_to_produce]
         output_columns = []
         if len(self._columns_to_produce) > 0:
             sk_output = self._clf.produce(sk_inputs)
-            if sparse.issparse(sk_output):
+            if sparse.issparse(sk_output): # pragma: no cover
                 sk_output = sk_output.toarray()
             outputs = self._wrap_predictions(inputs, sk_output)
             if len(outputs.columns) == len(self._input_column_names):
                 outputs.columns = self._input_column_names
             output_columns = [outputs]
-        else:
+        else: # pragma: no cover
             if self.hyperparams['error_on_no_input']:
                 raise RuntimeError("No input columns were selected")
             self.logger.warn("No input columns were selected")
@@ -209,7 +212,7 @@ class SKAxiswiseScaler(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyp
 
 
     @classmethod
-    def _get_columns_to_fit(cls, inputs: Inputs, hyperparams: Hyperparams):
+    def _get_columns_to_fit(cls, inputs: Inputs, hyperparams: Hyperparams): # pragma: no cover
         """
         Select columns to fit.
         Args:
@@ -239,7 +242,7 @@ class SKAxiswiseScaler(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyp
 
     @classmethod
     def _can_produce_column(cls, inputs_metadata: metadata_base.DataMetadata, column_index: int,
-                            hyperparams: Hyperparams) -> bool:
+                            hyperparams: Hyperparams) -> bool: # pragma: no cover
         """
         Output whether a column can be processed.
         Args:
@@ -274,7 +277,7 @@ class SKAxiswiseScaler(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyp
 
 
     @classmethod
-    def _get_target_columns_metadata(cls, outputs_metadata: metadata_base.DataMetadata, hyperparams) -> List[OrderedDict]:
+    def _get_target_columns_metadata(cls, outputs_metadata: metadata_base.DataMetadata, hyperparams) -> List[OrderedDict]: # pragma: no cover
         """
         Output metadata of selected columns.
         Args:
@@ -307,7 +310,7 @@ class SKAxiswiseScaler(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyp
 
     @classmethod
     def _update_predictions_metadata(cls, inputs_metadata: metadata_base.DataMetadata, outputs: Optional[Outputs],
-                                     target_columns_metadata: List[OrderedDict]) -> metadata_base.DataMetadata:
+                                     target_columns_metadata: List[OrderedDict]) -> metadata_base.DataMetadata: # pragma: no cover
         """
         Updata metadata for selected columns.
         Args:
@@ -328,7 +331,7 @@ class SKAxiswiseScaler(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyp
         return outputs_metadata
 
 
-    def _wrap_predictions(self, inputs: Inputs, predictions: ndarray) -> Outputs:
+    def _wrap_predictions(self, inputs: Inputs, predictions: ndarray) -> Outputs: # pragma: no cover
         """
         Wrap predictions into dataframe
         Args:
@@ -350,7 +353,7 @@ class SKAxiswiseScaler(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyp
 
     @classmethod
     def _copy_inputs_metadata(cls, inputs_metadata: metadata_base.DataMetadata, input_indices: List[int],
-                              outputs_metadata: metadata_base.DataMetadata, hyperparams):
+                              outputs_metadata: metadata_base.DataMetadata, hyperparams): # pragma: no cover
         """
         Updata metadata for selected columns.
         Args:
@@ -395,4 +398,4 @@ class SKAxiswiseScaler(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyp
 
         return target_columns_metadata
 
-SKAxiswiseScaler.__doc__ = SKAxiswiseScaler.__doc__
+SKAxiswiseScalerPrimitive.__doc__ = SKAxiswiseScalerPrimitive.__doc__

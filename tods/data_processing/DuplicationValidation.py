@@ -1,13 +1,14 @@
 from d3m import container
 from d3m.primitive_interfaces import base, transformer
 from d3m.metadata import base as metadata_base, hyperparams
+import uuid
 
 import os.path
 from d3m import utils
 
 import time
 
-__all__ = ('DuplicationValidation',)
+__all__ = ('DuplicationValidationPrimitive',)
 
 Inputs = container.DataFrame
 Outputs = container.DataFrame
@@ -25,7 +26,7 @@ class Hyperparams(hyperparams.Hyperparams):
     )
 
 
-class DuplicationValidation(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
+class DuplicationValidationPrimitive(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
     """
     Check whether the seires data involves duplicate data in one timestamp, and provide processing if the duplication exists.
 
@@ -39,11 +40,15 @@ class DuplicationValidation(transformer.TransformerPrimitiveBase[Inputs, Outputs
     metadata = metadata_base.PrimitiveMetadata({
          "name": "duplication validation primitive",
          "python_path": "d3m.primitives.tods.data_processing.duplication_validation",
-         "source": {'name': 'DATA Lab at Texas A&M University', 'contact': 'mailto:khlai037@tamu.edu', 
-         'uris': ['https://gitlab.com/lhenry15/tods.git', 'https://gitlab.com/lhenry15/tods/-/blob/Junjie/anomaly-primitives/anomaly_primitives/DuplicationValidation.py']},
-         "algorithm_types": [metadata_base.PrimitiveAlgorithmType.DUPLICATION_VALIDATION,],
+         "source": {
+             'name': 'DATALAB @ Texas A&M University', 
+             'contact': 'mailto:khlai037@tamu.edu', 
+         },
+         "algorithm_types": [
+             metadata_base.PrimitiveAlgorithmType.TODS_PRIMITIVE,
+         ],
          "primitive_family": metadata_base.PrimitiveFamily.DATA_PREPROCESSING,
-         "id": "cf6d8137-73d8-496e-a2e3-49f941ee716d",
+	 'id': str(uuid.uuid3(uuid.NAMESPACE_DNS, 'DuplicationValidationPrimitive')),
          "hyperparams_to_tune": ['keep_option'],
          "version": "0.0.1",
     })
@@ -91,8 +96,3 @@ class DuplicationValidation(transformer.TransformerPrimitiveBase[Inputs, Outputs
 
         return inputs
 
-    def _write(self, inputs:Inputs):
-        """
-        write inputs to current directory, only for test
-        """
-        inputs.to_csv(str(time.time())+'.csv')

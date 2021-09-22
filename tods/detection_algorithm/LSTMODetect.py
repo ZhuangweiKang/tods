@@ -68,7 +68,7 @@ class Hyperparams(Hyperparams_ODBase):
     )
 
     min_attack_time = hyperparams.Hyperparameter[int](
-        default=5,
+        default=10,
         description='The minimum amount of recent time steps that is used to define a collective attack.',
         semantic_types=['https://metadata.datadrivendiscovery.org/types/TuningParameter']
     )
@@ -97,7 +97,7 @@ class Hyperparams(Hyperparams_ODBase):
     )
 
     epochs = hyperparams.Hyperparameter[int](
-        default=10,
+        default=20,
         description='Number of epochs to train the model.',
         semantic_types=['https://metadata.datadrivendiscovery.org/types/TuningParameter']
     )
@@ -123,13 +123,13 @@ class Hyperparams(Hyperparams_ODBase):
     )
 
     hidden_dim = hyperparams.Hyperparameter[int](
-        default=16,
+        default=8,
         description='Hidden dim of LSTM.',
         semantic_types=['https://metadata.datadrivendiscovery.org/types/TuningParameter']
     )
 
     n_hidden_layer = hyperparams.Hyperparameter[int](
-        default=0,
+        default=2,
         description='Hidden layer number of LSTM.',
         semantic_types=['https://metadata.datadrivendiscovery.org/types/TuningParameter']
     )
@@ -161,7 +161,7 @@ class Hyperparams(Hyperparams_ODBase):
     pass
 
 
-class LSTMODetector(UnsupervisedOutlierDetectorBase[Inputs, Outputs, Params, Hyperparams]):
+class LSTMODetectorPrimitive(UnsupervisedOutlierDetectorBase[Inputs, Outputs, Params, Hyperparams]):
     """
 
     Parameters
@@ -212,7 +212,9 @@ class LSTMODetector(UnsupervisedOutlierDetectorBase[Inputs, Outputs, Params, Hyp
                  docker_containers: Dict[str, DockerContainer] = None) -> None:
         super().__init__(hyperparams=hyperparams, random_seed=random_seed, docker_containers=docker_containers)
 
-        self._clf = LSTMOutlierDetector(contamination=hyperparams['contamination'],
+        self._clf = LSTMOutlierDetector(window_size=hyperparams['window_size'],
+                                        step_size=hyperparams['step_size'],
+                                        contamination=hyperparams['contamination'],
                                         train_contamination=hyperparams['train_contamination'],
                                         min_attack_time=hyperparams['min_attack_time'],
                                         danger_coefficient_weight=hyperparams['danger_coefficient_weight'],

@@ -1,5 +1,5 @@
 
-def load_pipeline(pipeline_path):
+def load_pipeline(pipeline_path): # pragma: no cover
     """Load a pipeline given a path
 
     Args:
@@ -13,22 +13,23 @@ def load_pipeline(pipeline_path):
 
     return pipeline
     
-def generate_dataset(df, target_index):
+def generate_dataset(df, target_index, system_dir=None): # pragma: no cover
     """Generate dataset
 
     Args:
         df (pandas.DataFrame): dataset
         target_index (int): The column index of the target
+        system_dir (str): Where the systems will be stored
 
     returns:
         dataset
     """
     from axolotl.utils import data_problem
-    dataset = data_problem.import_input_data(df, target_index=target_index)
+    dataset = data_problem.import_input_data(df, target_index=target_index, media_dir=system_dir)
 
     return dataset
 
-def generate_problem(dataset, metric):
+def generate_problem(dataset, metric): # pragma: no cover
     """Generate dataset
 
     Args:
@@ -45,6 +46,12 @@ def generate_problem(dataset, metric):
         performance_metrics = [{'metric': PerformanceMetric.F1, 'params': {'pos_label': '1'}}]
     elif metric == 'F1_MACRO':
         performance_metrics = [{'metric': PerformanceMetric.F1_MACRO, 'params': {}}]
+    elif metric == 'RECALL':
+        performance_metrics = [{'metric': PerformanceMetric.RECALL, 'params': {'pos_label': '1'}}]
+    elif metric == 'PRECISION':
+        performance_metrics = [{'metric': PerformanceMetric.PRECISION, 'params': {'pos_label': '1'}}]
+    elif metric == 'ALL':
+        performance_metrics = [{'metric': PerformanceMetric.PRECISION, 'params': {'pos_label': '1'}}, {'metric': PerformanceMetric.RECALL, 'params': {'pos_label': '1'}}, {'metric': PerformanceMetric.F1_MACRO, 'params': {}}, {'metric': PerformanceMetric.F1, 'params': {'pos_label': '1'}}]
     else:
         raise ValueError('The metric {} not supported.'.format(metric))
 
@@ -54,7 +61,7 @@ def generate_problem(dataset, metric):
     
     return problem_description
 
-def evaluate_pipeline(dataset, pipeline, metric='F1', seed=0):
+def evaluate_pipeline(dataset, pipeline, metric='F1', seed=0): # pragma: no cover
     """Evaluate a Pipeline
 
     Args:

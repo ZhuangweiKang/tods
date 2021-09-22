@@ -2,6 +2,7 @@ import os
 import typing
 import pandas as pd 
 import numpy as np
+import uuid
 
 
 from d3m import container, utils
@@ -11,7 +12,6 @@ from d3m.primitive_interfaces import base, transformer
 from d3m.primitive_interfaces.base import CallResult, DockerContainer
 
 
-import common_primitives
 import logging
 import math
 
@@ -20,7 +20,7 @@ from collections import OrderedDict
 from scipy import sparse
 from numpy import ndarray
 
-__all__ = ('CategoricalToBinary',)
+__all__ = ('CategoricalToBinaryPrimitive',)
 
 Inputs = container.DataFrame
 Outputs = container.DataFrame
@@ -81,38 +81,42 @@ class Cat2B:
         dataframe = inputs
         processed_df = utils.pandas.DataFrame()
         for target_column in dataframe.columns :
-            try:
-                req_col = pd.DataFrame(dataframe.loc[:,target_column])
-                categories = req_col[target_column].unique()
+            req_col = pd.DataFrame(dataframe.loc[:,target_column])
+            res = pd.get_dummies(req_col[target_column],prefix=req_col.columns[0],dummy_na=True)
+            processed_df = pd.concat([processed_df,res],axis=1)
 
-                column_names = [target_column+'_'+str(i) for i in categories]
-                column_dtype = req_col[target_column].dtype
+            # try:
+            #     req_col = pd.DataFrame(dataframe.loc[:,target_column])
+            #     categories = req_col[target_column].unique()
 
-                if column_dtype== np.object:
-                    for i,j in zip(categories,column_names):
-                        if i is not None:
-                            req_col.loc[req_col[target_column]==i,j] = "1"
-                            req_col.loc[req_col[target_column]!=i,j] = "0"
-                        else:
-                            req_col.loc[req_col[target_column].isna()==False,j] = "0"
-                            req_col.loc[req_col[target_column].isna()==True,j] = None
+            #     column_names = [target_column+'_'+str(i) for i in categories]
+            #     column_dtype = req_col[target_column].dtype
 
-                else:
-                    for i,j in zip(categories,column_names):
-                        if not math.isnan(i):
-                            req_col.loc[req_col[target_column]==i,j] = "1"
-                            req_col.loc[req_col[target_column]!=i,j] = "0"
-                        else:
-                            req_col.loc[req_col[target_column].isna()==False,j] = "0"
-                            req_col.loc[req_col[target_column].isna()==True,j] = np.nan
+            #     if column_dtype== np.object:
+            #         for i,j in zip(categories,column_names):
+            #             if i is not None:
+            #                 req_col.loc[req_col[target_column]==i,j] = "1"
+            #                 req_col.loc[req_col[target_column]!=i,j] = "0"
+            #             else:
+            #                 req_col.loc[req_col[target_column].isna()==False,j] = "0"
+            #                 req_col.loc[req_col[target_column].isna()==True,j] = None
+
+            #     else:
+            #         for i,j in zip(categories,column_names):
+            #             if not math.isnan(i):
+            #                 req_col.loc[req_col[target_column]==i,j] = "1"
+            #                 req_col.loc[req_col[target_column]!=i,j] = "0"
+            #             else:
+            #                 req_col.loc[req_col[target_column].isna()==False,j] = "0"
+            #                 req_col.loc[req_col[target_column].isna()==True,j] = np.nan
                     
-                processed_df[column_names] = req_col[column_names]
-            except KeyError:
-                logging.warning("Target Column "+ target_column+" Not Found in Dataframe")
+            #     processed_df[column_names] = req_col[column_names]
+            # except KeyError:
+            #     logging.warning("Target Column "+ target_column+" Not Found in Dataframe")
         
         return processed_df;
 
-class CategoricalToBinary(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
+class CategoricalToBinaryPrimitive(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
     """
         A primitive which will convert all the distinct values present in a column to a binary represntation with each distinct value having a different column.
 
@@ -144,22 +148,18 @@ class CategoricalToBinary(transformer.TransformerPrimitiveBase[Inputs, Outputs, 
     __author__ = "DATA LAB"
     metadata = metadata_base.PrimitiveMetadata(
         {
-            "__author__ " : "DATA Lab at Texas A&M University",
+            "__author__ " : "DATALAB @ Texas A&M University",
             'name': "Converting Categorical to Binary",
             'python_path': 'd3m.primitives.tods.data_processing.categorical_to_binary',
             'source': {
                 'name': 'DATA Lab at Texas A&M University',
                 'contact': 'mailto:khlai037@tamu.edu',
-                'uris': [
-                    'https://gitlab.com/lhenry15/tods.git',
-                    'https://gitlab.com/lhenry15/tods/-/blob/purav/anomaly-primitives/anomaly_primitives/CategoricalToBinaryDataframe.py',
-                ],
             },
             'algorithm_types': [
-                metadata_base.PrimitiveAlgorithmType.CATEGORICAL_TO_BINARY,
+                metadata_base.PrimitiveAlgorithmType.TODS_PRIMITIVE,
             ],
             'primitive_family': metadata_base.PrimitiveFamily.DATA_PREPROCESSING,
-            'id': 'bb6fb64d-cf20-45f0-8c4b-d7218f9c58c2',
+            'id': str(uuid.uuid3(uuid.NAMESPACE_DNS, 'CategoricalToBinaryPrimitive')),
             'hyperparameters_to_tune':"None",
             'version': '0.0.1',
         },
@@ -290,12 +290,12 @@ class CategoricalToBinary(transformer.TransformerPrimitiveBase[Inputs, Outputs, 
         if len(accepted_semantic_types - semantic_types) == 0:
             return True
 
-        print(semantic_types)
+        # print(semantic_types)
         return False
 
 
     @classmethod
-    def _get_target_columns_metadata(cls, outputs_metadata: metadata_base.DataMetadata, hyperparams) -> List[OrderedDict]:
+    def _get_target_columns_metadata(cls, outputs_metadata: metadata_base.DataMetadata, hyperparams) -> List[OrderedDict]: # pragma: no cover
         """
         Output metadata of selected columns.
         Args:
@@ -391,5 +391,5 @@ class CategoricalToBinary(transformer.TransformerPrimitiveBase[Inputs, Outputs, 
         return target_columns_metadata
 
 
-CategoricalToBinary.__doc__ = CategoricalToBinary.__doc__
+CategoricalToBinaryPrimitive.__doc__ = CategoricalToBinaryPrimitive.__doc__
 

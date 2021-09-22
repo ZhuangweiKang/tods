@@ -56,7 +56,7 @@ class Hyperparams(Hyperparams_ODBase):
     ######## Add more Hyperparamters #######
 
     hidden_neurons = hyperparams.List(
-        default=[4, 2, 4],
+        default=[1, 4, 1],
         elements=hyperparams.Hyperparameter[int](1),
         description='The number of neurons per hidden layers.',
         semantic_types=['https://metadata.datadrivendiscovery.org/types/TuningParameter']
@@ -95,7 +95,7 @@ class Hyperparams(Hyperparams_ODBase):
     )
 
     epochs = hyperparams.Hyperparameter[int](
-        default=100,
+        default=20,
         description='Number of epochs to train the model.',
         semantic_types=['https://metadata.datadrivendiscovery.org/types/TuningParameter']
     )
@@ -160,7 +160,7 @@ class Hyperparams(Hyperparams_ODBase):
     contamination = hyperparams.Uniform(
         lower=0.,
         upper=0.5,
-        default=0.1,
+        default=0.01,
         description='The amount of contamination of the data set, i.e. the proportion of outliers in the data set. ',
         semantic_types=['https://metadata.datadrivendiscovery.org/types/TuningParameter']
     )
@@ -169,7 +169,7 @@ class Hyperparams(Hyperparams_ODBase):
     pass
 
 
-class AutoEncoder(UnsupervisedOutlierDetectorBase[Inputs, Outputs, Params, Hyperparams]):
+class AutoEncoderPrimitive(UnsupervisedOutlierDetectorBase[Inputs, Outputs, Params, Hyperparams]):
     """
     Auto Encoder (AE) is a type of neural networks for learning useful data
     representations unsupervisedly. Similar to PCA, AE could be used to
@@ -271,13 +271,19 @@ class AutoEncoder(UnsupervisedOutlierDetectorBase[Inputs, Outputs, Params, Hyper
     """
 
     metadata = metadata_base.PrimitiveMetadata({
+        "__author__": "DATA Lab at Texas A&M University",
         "name": "TODS.anomaly_detection_primitives.AutoEncoder",
         "python_path": "d3m.primitives.tods.detection_algorithm.pyod_ae",
-        "source": {'name': "DATA Lab at Texas A&M University", 'contact': 'mailto:khlai037@tamu.edu','uris': ['https://gitlab.com/lhenry15/tods.git']},
-        "algorithm_types": [metadata_base.PrimitiveAlgorithmType.VARIATIONAL_AUTO_ENCODER, ],
-        "primitive_family": metadata_base.PrimitiveFamily.ANOMALY_DETECTION,
+        "source": {
+            'name': "DATA Lab at Texas A&M University", 
+            'contact': 'mailto:khlai037@tamu.edu',
+        },
         "version": "0.0.1",
-        "hyperparameters_to_tune": [''],
+        "hyperparameters_to_tune": ['contamination', 'hidden_activation, output_activation, loss'],
+        "algorithm_types": [
+            metadata_base.PrimitiveAlgorithmType.TODS_PRIMITIVE,
+        ],
+        "primitive_family": metadata_base.PrimitiveFamily.ANOMALY_DETECTION,
         "id": str(uuid.uuid3(uuid.NAMESPACE_DNS, 'AutoEncoderPrimitive')),
     })
 
@@ -292,7 +298,7 @@ class AutoEncoder(UnsupervisedOutlierDetectorBase[Inputs, Outputs, Params, Hyper
             raise ValueError('AE only suports mean squered error for now')
 
         self._clf = PyODAutoEncoder(contamination=hyperparams['contamination'],
-                        hidden_neurons=hyperparams['hidden_neurons'],
+                        hidden_neurons=list(hyperparams['hidden_neurons']),
                         hidden_activation=hyperparams['hidden_activation'],
                         output_activation=hyperparams['output_activation'],
                         loss=loss,
@@ -329,7 +335,7 @@ class AutoEncoder(UnsupervisedOutlierDetectorBase[Inputs, Outputs, Params, Hyper
         Returns:
             None
         """
-        return super().fit()
+        return super()._fit()
 
     def produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> CallResult[Outputs]:
         """
@@ -341,7 +347,7 @@ class AutoEncoder(UnsupervisedOutlierDetectorBase[Inputs, Outputs, Params, Hyper
             Container DataFrame
             1 marks Outliers, 0 marks normal.
         """
-        return super().produce(inputs=inputs, timeout=timeout, iterations=iterations)
+        return super()._produce(inputs=inputs, timeout=timeout, iterations=iterations)
 
     def get_params(self) -> Params:
         """

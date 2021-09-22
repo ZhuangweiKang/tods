@@ -9,6 +9,7 @@ from numpy import ndarray
 from collections import OrderedDict
 from scipy import sparse
 import os
+import uuid
 
 import numpy
 import typing
@@ -22,6 +23,7 @@ from d3m.metadata import hyperparams, params, base as metadata_base
 
 from d3m.base import utils as base_utils
 from d3m.exceptions import PrimitiveNotFittedError
+from ..common.TODSBasePrimitives import TODSTransformerPrimitiveBase
 
 __all__ = ('SpectralResidualTransformPrimitive',)
 
@@ -86,42 +88,30 @@ class Hyperparams(hyperparams.Hyperparams):
 
 
 
-class SpectralResidualTransformPrimitive(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
+class SpectralResidualTransformPrimitive(TODSTransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
     """
     Primitive to find Spectral Residual Transform of time series
     """
-    __author__ = "DATA Lab at Texas A&M University",
-    metadata = metadata_base.PrimitiveMetadata(
-        {
-            'id': '88dda04b-090b-49a5-8035-279eb3be9cd9',
-            'version': '0.1.0',
-            'name': 'Time Series Spectral Residual',
-            'python_path': 'd3m.primitives.tods.feature_analysis.spectral_residual_transform',
-            'keywords': ['Time Series','FFT'],
-            "hyperparams_to_tune": ['avg_filter_dimension'],
-            'source': {
-                'name': 'DATA Lab at Texas A&M University',
-                'uris': ['https://gitlab.com/lhenry15/tods.git','https://gitlab.com/lhenry15/tods/-/blob/devesh/tods/feature_analysis/SpectralResidualTransform.py'],
-                'contact': 'mailto:khlai037@tamu.edu'
+    metadata = metadata_base.PrimitiveMetadata({
+        "__author__": "DATA Lab @ Texas A&M University",
+        'name': 'Time Series Spectral Residual',
+        'python_path': 'd3m.primitives.tods.feature_analysis.spectral_residual_transform',
+        'keywords': ['Time Series','FFT'],
+        'source': {
+            'name': 'DATA Lab @ Texas A&M University',
+            'contact': 'mailto:khlai037@tamu.edu'
 
-            },
-            'installation': [
-                {'type': metadata_base.PrimitiveInstallationType.PIP,
-                 'package_uri': 'git+https://gitlab.com/lhenry15/tods.git@{git_commit}#egg=TODS'.format(
-                     git_commit=d3m_utils.current_git_commit(os.path.dirname(__file__)),
-                 ),
-                 }
+        },
+        "hyperparams_to_tune": ['avg_filter_dimension'],
+        'version': '0.1.0',
+        'algorithm_types': [
+            metadata_base.PrimitiveAlgorithmType.TODS_PRIMITIVE,
+        ],
+        'primitive_family': metadata_base.PrimitiveFamily.FEATURE_CONSTRUCTION,
+	'id': str(uuid.uuid3(uuid.NAMESPACE_DNS, 'SpectralResidualTransformPrimitive')),
+    })
 
-            ],
-            'algorithm_types': [
-                metadata_base.PrimitiveAlgorithmType.DATA_PROFILING,
-            ],
-            'primitive_family': metadata_base.PrimitiveFamily.FEATURE_CONSTRUCTION,
-
-        }
-    )
-
-    def produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> base.CallResult[Outputs]:
+    def _produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> base.CallResult[Outputs]:
         """
 
         Args:
@@ -132,6 +122,7 @@ class SpectralResidualTransformPrimitive(transformer.TransformerPrimitiveBase[In
         Returns:
             Container DataFrame containing Spectral Residual Transform of  time series
         """
+
         self.logger.info('Spectral Residual  Primitive called')
 
         # Get cols to fit.
@@ -142,7 +133,7 @@ class SpectralResidualTransformPrimitive(transformer.TransformerPrimitiveBase[In
         if len(self._training_indices) > 0:
             # self._clf.fit(self._training_inputs)
             self._fitted = True
-        else:
+        else: # pragma: no cover
             if self.hyperparams['error_on_no_input']:
                 raise RuntimeError("No input columns were selected")
             self.logger.warn("No input columns were selected")
@@ -166,7 +157,7 @@ class SpectralResidualTransformPrimitive(transformer.TransformerPrimitiveBase[In
             output_columns = [outputs]
 
 
-        else:
+        else: # pragma: no cover
             if self.hyperparams['error_on_no_input']:
                 raise RuntimeError("No input columns were selected")
             self.logger.warn("No input columns were selected")
@@ -358,7 +349,7 @@ class SpectralResidualTransformPrimitive(transformer.TransformerPrimitiveBase[In
 
         return res
 
-    def _write(self, inputs: Inputs):
+    def _write(self, inputs: Inputs): # pragma: no cover
         inputs.to_csv(str(time.time()) + '.csv')
 
 

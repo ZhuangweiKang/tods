@@ -2,6 +2,7 @@
 """Autoregressive model for univariate time series outlier detection.
 """
 import numpy as np
+from rasterio.windows import window_index
 from sklearn.utils import check_array
 from sklearn.utils.validation import check_is_fitted
 from scipy.special import erf
@@ -16,7 +17,9 @@ from keras.models import Sequential
 
 class LSTMOutlierDetector(CollectiveBaseDetector):
 
-    def __init__(self,contamination=0.1,
+    def __init__(self, window_size=1,
+                    step_size=1,
+                    contamination=0.1,
                     train_contamination=0.0,
                     min_attack_time=5,
                     danger_coefficient_weight=0.5,
@@ -25,16 +28,16 @@ class LSTMOutlierDetector(CollectiveBaseDetector):
                     epochs=10,
                     batch_size=8,
                     dropout_rate=0.0,
-                    feature_dim=1,
-                    hidden_dim=8,
+                    feature_dim=9,
+                    hidden_dim=1,
                     n_hidden_layer=0,
                     activation=None,
                     diff_group_method='average'
                  ):
 
         super(LSTMOutlierDetector, self).__init__(contamination=contamination,
-                                                  window_size=min_attack_time,
-                                                  step_size=1,
+                                                  window_size=window_size,
+                                                  step_size=step_size
                                                   )
 
         self.train_contamination = train_contamination
@@ -51,19 +54,41 @@ class LSTMOutlierDetector(CollectiveBaseDetector):
         self.hidden_dim = hidden_dim
         self.n_hidden_layer = n_hidden_layer
         self.diff_group_method = diff_group_method
+        self.activation = activation
 
+    # def _build_model(self):
+    #     print('dim:', self.hidden_dim, self.feature_dim)
+    #     model_ = Sequential()
+    #     model_.add(LSTM(units=self.hidden_dim, input_shape=(self.feature_dim, 1),
+    #                          dropout=self.dropout_rate, activation=self.activation, return_sequences=True))
 
-        self.model_ = Sequential()
-        self.model_.add(LSTM(units=hidden_dim, input_shape=(feature_dim, 1),
-                             dropout=dropout_rate, activation=activation))
+    #     for layer_idx in range(self.n_hidden_layer-1):
+    #         model_.add(LSTM(units=self.hidden_dim, input_shape=(self.hidden_dim, 1),
+    #                          dropout=self.dropout_rate, activation=self.activation, return_sequences=True))
 
-        for layer_idx in range(n_hidden_layer):
-            self.model_.add(LSTM(units=hidden_dim, input_shape=(hidden_dim, 1),
-                             dropout=dropout_rate, activation=activation))
+    #     model_.add(LSTM(units=self.hidden_dim, input_shape=(self.hidden_dim, 1),
+    #                          dropout=self.dropout_rate, activation=self.activation))
 
-        self.model_.add(Dense(units=feature_dim, input_shape=(hidden_dim, 1), activation=None))
+    #     model_.add(Dense(units=self.feature_dim, input_shape=(self.hidden_dim, 1), activation=None))
 
-        self.model_.compile(loss=self.loss, optimizer=self.optimizer)
+    #     model_.compile(loss=self.loss, optimizer=self.optimizer)
+    #     return model_
+
+    def _build_model(self):
+        model_ = Sequential()
+        model_.add(LSTM(units=self.hidden_dim, input_shape=(self.feature_dim, 1),
+                             dropout=self.dropout_rate, activation=self.activation,
+                             return_sequences=bool(self.n_hidden_layer>0)))
+
+        for layer_idx in range(self.n_hidden_layer):
+            model_.add(LSTM(units=self.hidden_dim, input_shape=(self.hidden_dim, 1),
+                             dropout=self.dropout_rate, activation=self.activation,
+                             return_sequences=bool(layer_idx < self.n_hidden_layer - 1)))
+
+        model_.add(Dense(units=self.feature_dim, input_shape=(self.hidden_dim, 1), activation=None))
+
+        model_.compile(loss=self.loss, optimizer=self.optimizer)
+        return model_
 
     def fit(self, X: np.array, y=None) -> object:
         """Fit detector. y is ignored in unsupervised methods.
@@ -81,9 +106,12 @@ class LSTMOutlierDetector(CollectiveBaseDetector):
         self : object
             Fitted estimator.
         """
+        print("XXXX:", X.shape)
         X = check_array(X).astype(np.float)
         self._set_n_classes(None)
         X_buf, y_buf = self._get_sub_matrices(X)
+        self.feature_dim = X_buf.shape[1]
+        self.model_ = self._build_model()
 
         # fit the LSTM model
         self.model_.fit(X_buf, y_buf, epochs=self.epochs, batch_size=self.batch_size)
@@ -115,6 +143,7 @@ class LSTMOutlierDetector(CollectiveBaseDetector):
         relative_error = (np.linalg.norm(y_predict - y_buf, axis=1) / np.linalg.norm(y_buf + 1e-6, axis=1)).ravel()
 
         return relative_error
+    
 
     def decision_function(self, X: np.array):
         """Predict raw anomaly scores of X using the fitted detector.
@@ -169,7 +198,7 @@ class LSTMOutlierDetector(CollectiveBaseDetector):
             # print(danger_coefficient, averaged_relative_error)
                 
 
-        else:
+        else: # pragma: no cover
             danger_coefficient = np.zeros(relative_error.shape)
             averaged_relative_error = np.zeros(relative_error.shape)
 
@@ -206,18 +235,21 @@ class LSTMOutlierDetector(CollectiveBaseDetector):
         # print(relative_error_right_inds)
         pred_score = danger_coefficient * self.danger_coefficient_weight + averaged_relative_error * (1 - self.danger_coefficient_weight)
 
+        pred_score = np.concatenate((np.zeros((self.window_size,)), pred_score))
+        relative_error_left_inds = np.concatenate((np.arange(self.window_size), relative_error_left_inds+self.window_size))
+        relative_error_right_inds = np.concatenate((np.arange(self.window_size)+self.window_size, relative_error_right_inds+self.window_size))
+
         return pred_score, relative_error_left_inds, relative_error_right_inds
 
 
-
-if __name__ == "__main__":
+def main():
     X_train = np.asarray(
         [3., 4., 8., 16, 18, 13., 22., 36., 59., 128, 62, 67, 78, 100]).reshape(-1, 1)
 
     X_test = np.asarray(
-        [3., 4., 8.6, 13.4, 22.5, 17, 19.2, 36.1, 127, -23, 59.2]).reshape(-1,1)
+        [3., 4., 8., 16.1, 18.2, 36.2, 57.1, -10.3, 17, 19.2, 36.1, 127, -23, 59.2]).reshape(-1,1)
 
-    # print(X_train.shape, X_test.shape)
+    print(X_train.shape, X_test.shape)
 
     clf = LSTMOutlierDetector(contamination=0.1)
     clf.fit(X_train)
@@ -231,3 +263,6 @@ if __name__ == "__main__":
 
     # print('pred_scores: ',pred_scores)
     print('pred_labels: ',pred_labels)
+
+if __name__ == "__main__": # pragma: no cover
+    main()

@@ -13,6 +13,7 @@ import os
 import numpy
 import typing
 import time
+import uuid
 
 from d3m import container
 from d3m.primitive_interfaces import base, transformer
@@ -22,6 +23,7 @@ from d3m.metadata import hyperparams, params, base as metadata_base
 
 from d3m.base import utils as base_utils
 from d3m.exceptions import PrimitiveNotFittedError
+from ..common.TODSBasePrimitives import TODSTransformerPrimitiveBase
 
 __all__ = ('StatisticalMeanAbsPrimitive',)
 
@@ -86,42 +88,29 @@ class Hyperparams(hyperparams.Hyperparams):
 
 
 
-class StatisticalMeanAbsPrimitive(transformer.TransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
+class StatisticalMeanAbsPrimitive(TODSTransformerPrimitiveBase[Inputs, Outputs, Hyperparams]):
     """
     Primitive to find mean_abs of time series
     """
-    __author__ = "DATA Lab at Texas A&M University",
-    metadata = metadata_base.PrimitiveMetadata(
-        {
-            'id': 'c397f0b2-45da-4263-8cca-b4e1a9502918',
-            'version': '0.1.0',
-            'name': 'Time Series Decompostional',
-            'python_path': 'd3m.primitives.tods.feature_analysis.statistical_mean_abs',
-            'keywords': ['Time Series','MeanAbs'],
-            "hyperparams_to_tune": ['window_size'],
-            'source': {
-                'name': 'DATA Lab at Texas A&M University',
-                'uris': ['https://gitlab.com/lhenry15/tods.git','https://gitlab.com/lhenry15/tods/-/blob/devesh/tods/feature_analysis/StatisticalMeanAbs.py'],
-                'contact': 'mailto:khlai037@tamu.edu'
+    metadata = metadata_base.PrimitiveMetadata({
+        "__author__": "DATA Lab @ Texas A&M University",
+        'name': 'Time Series Decompostional',
+        'python_path': 'd3m.primitives.tods.feature_analysis.statistical_mean_abs',
+        'keywords': ['Time Series','MeanAbs'],
+        'source': {
+            'name': 'DATA Lab @ Texas A&M University',
+            'contact': 'mailto:khlai037@tamu.edu'
+        },
+        'version': '0.1.0',
+        "hyperparams_to_tune": ['window_size'],
+        'algorithm_types': [
+            metadata_base.PrimitiveAlgorithmType.TODS_PRIMITIVE,
+        ],
+        'primitive_family': metadata_base.PrimitiveFamily.FEATURE_CONSTRUCTION,
+	'id': str(uuid.uuid3(uuid.NAMESPACE_DNS, 'StatisticalMeanAbsPrimitive')),
+    })
 
-            },
-            'installation': [
-                {'type': metadata_base.PrimitiveInstallationType.PIP,
-                 'package_uri': 'git+https://gitlab.com/lhenry15/tods.git@{git_commit}#egg=TODS'.format(
-                     git_commit=d3m_utils.current_git_commit(os.path.dirname(__file__)),
-                 ),
-                 }
-
-            ],
-            'algorithm_types': [
-                metadata_base.PrimitiveAlgorithmType.DATA_PROFILING,
-            ],
-            'primitive_family': metadata_base.PrimitiveFamily.FEATURE_CONSTRUCTION,
-
-        }
-    )
-
-    def produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> base.CallResult[Outputs]:
+    def _produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> base.CallResult[Outputs]:
         """
 
         Args:
@@ -142,7 +131,7 @@ class StatisticalMeanAbsPrimitive(transformer.TransformerPrimitiveBase[Inputs, O
         if len(self._training_indices) > 0:
             # self._clf.fit(self._training_inputs)
             self._fitted = True
-        else:
+        else: # pragma: no cover
             if self.hyperparams['error_on_no_input']:
                 raise RuntimeError("No input columns were selected")
             self.logger.warn("No input columns were selected")
@@ -166,7 +155,7 @@ class StatisticalMeanAbsPrimitive(transformer.TransformerPrimitiveBase[Inputs, O
             output_columns = [outputs]
 
 
-        else:
+        else: # pragma: no cover
             if self.hyperparams['error_on_no_input']:
                 raise RuntimeError("No input columns were selected")
             self.logger.warn("No input columns were selected")
@@ -302,7 +291,7 @@ class StatisticalMeanAbsPrimitive(transformer.TransformerPrimitiveBase[Inputs, O
 
         return target_columns_metadata
 
-    def _write(self, inputs: Inputs):
+    def _write(self, inputs: Inputs): # pragma: no cover
         inputs.to_csv(str(time.time()) + '.csv')
 
 

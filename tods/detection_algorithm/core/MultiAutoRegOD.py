@@ -100,7 +100,7 @@ class MultiAutoRegOD(CollectiveBaseDetector):
 
         return models
 
-    def _score_combination(self, scores):
+    def _score_combination(self, scores): # pragma: no cover
         """Internal function for combining univarite scores.
         """
 
@@ -194,10 +194,16 @@ class MultiAutoRegOD(CollectiveBaseDetector):
         decison_mat_scaled = self._score_scalar.transform(decison_mat)
         decision_scores = self._score_combination(decison_mat_scaled)
 
+        # print(decision_scores.shape, X_left_inds.shape, X_right_inds.shape)
+        decision_scores = np.concatenate((np.zeros((self.window_size,)), decision_scores))
+        X_left_inds = np.concatenate(((-self.window_size)*np.ones((self.window_size,)).astype(np.int), X_left_inds))
+        X_right_inds = np.concatenate((np.zeros((self.window_size,)).astype(np.int), X_right_inds))
+        # print(decision_scores.shape, X_left_inds.shape, X_right_inds.shape)
+
         return decision_scores, X_left_inds, X_right_inds
 
 
-if __name__ == "__main__":
+if __name__ == "__main__": # pragma: no cover
     X_train = np.asarray(
         [[3., 5], [5., 9], [7., 2], [42., 20], [8., 12], [10., 12], [12., 12],
          [18., 16], [20., 7], [18., 10], [23., 12], [22., 15]])

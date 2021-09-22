@@ -56,7 +56,7 @@ class Hyperparams(Hyperparams_ODBase):
     ######## Add more Hyperparamters #######
 
     encoder_neurons = hyperparams.List(
-        default=[4, 2, 4],
+        default=[1, 4, 1],
         elements=hyperparams.Hyperparameter[int](1),
         description='The number of neurons per hidden layers in encoder.',
         semantic_types=['https://metadata.datadrivendiscovery.org/types/TuningParameter']
@@ -153,7 +153,7 @@ class Hyperparams(Hyperparams_ODBase):
         semantic_types=['https://metadata.datadrivendiscovery.org/types/TuningParameter']
     )
 
-    verbosity = hyperparams.Enumeration[int](
+    verbose = hyperparams.Enumeration[int](
         values=[0, 1, 2],
         default=1,
         description='Verbosity mode.',
@@ -186,7 +186,7 @@ class Hyperparams(Hyperparams_ODBase):
     pass
 
 
-class VariationalAutoEncoder(UnsupervisedOutlierDetectorBase[Inputs, Outputs, Params, Hyperparams]):
+class VariationalAutoEncoderPrimitive(UnsupervisedOutlierDetectorBase[Inputs, Outputs, Params, Hyperparams]):
     """
     Auto Encoder (AE) is a type of neural networks for learning useful data
     representations unsupervisedly. Similar to PCA, AE could be used to
@@ -288,13 +288,19 @@ class VariationalAutoEncoder(UnsupervisedOutlierDetectorBase[Inputs, Outputs, Pa
     """
 
     metadata = metadata_base.PrimitiveMetadata({
+        "__author__": "DATA Lab at Texas A&M University",
         "name": "TODS.anomaly_detection_primitives.VariationalAutoEncoder",
         "python_path": "d3m.primitives.tods.detection_algorithm.pyod_vae",
-        "source": {'name': "DATA Lab at Texas A&M University", 'contact': 'mailto:khlai037@tamu.edu','uris': ['https://gitlab.com/lhenry15/tods.git']},
-        "algorithm_types": [metadata_base.PrimitiveAlgorithmType.VARIATIONAL_AUTO_ENCODER, ],
-        "primitive_family": metadata_base.PrimitiveFamily.ANOMALY_DETECTION,
+        "source": {
+            'name': "DATA Lab at Texas A&M University", 
+            'contact': 'mailto:khlai037@tamu.edu',
+        },
         "version": "0.0.1",
-        "hyperparameters_to_tune": [''],
+        "hyperparameters_to_tune": ['contamination'],
+        "algorithm_types": [
+            metadata_base.PrimitiveAlgorithmType.TODS_PRIMITIVE,
+        ],
+        "primitive_family": metadata_base.PrimitiveFamily.ANOMALY_DETECTION,
         "id": str(uuid.uuid3(uuid.NAMESPACE_DNS, 'AutoEncoderPrimitive')),
     })
 
@@ -324,7 +330,7 @@ class VariationalAutoEncoder(UnsupervisedOutlierDetectorBase[Inputs, Outputs, Pa
                         l2_regularizer=hyperparams['l2_regularizer'],
                         validation_size=hyperparams['validation_size'],
                         preprocessing=hyperparams['preprocessing'],
-                        verbosity=hyperparams['verbosity'],
+                        verbose=hyperparams['verbose'],
                         random_state=hyperparams['random_state'],
                         )
 

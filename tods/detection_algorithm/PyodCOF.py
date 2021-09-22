@@ -35,7 +35,7 @@ from d3m import container, utils as d3m_utils
 
 from .UODBasePrimitive import Params_ODBase, Hyperparams_ODBase, UnsupervisedOutlierDetectorBase
 from pyod.models.cof import COF
-# import uuid
+import uuid
 
 
 Inputs = d3m_dataframe
@@ -67,7 +67,7 @@ class Hyperparams(Hyperparams_ODBase):
 
 
 
-class PyodCOF(UnsupervisedOutlierDetectorBase[Inputs, Outputs, Params, Hyperparams]):
+class COFPrimitive(UnsupervisedOutlierDetectorBase[Inputs, Outputs, Params, Hyperparams]):
     """
     Connectivity-Based Outlier Factor (COF) COF uses the ratio of average
     chaining distance of data point and the average of average chaining
@@ -105,29 +105,22 @@ class PyodCOF(UnsupervisedOutlierDetectorBase[Inputs, Outputs, Params, Hyperpara
         Number of neighbors to use by default for k neighbors queries.
     """
 
-    __author__ = "Data Lab"
-    metadata = metadata_base.PrimitiveMetadata(
-    {
+    metadata = metadata_base.PrimitiveMetadata({
         '__author__' : "DATA Lab at Texas A&M University",
         'name': "Connectivity-Based Outlier Factor (COF)",
         'python_path': 'd3m.primitives.tods.detection_algorithm.pyod_cof',
         'source': {
-        'name': 'DATA Lab at Texas A&M University',
-        'contact': 'mailto:khlai037@tamu.edu',
-        'uris': [
-            'https://gitlab.com/lhenry15/tods.git',
-            'https://gitlab.com/lhenry15/tods/-/blob/purav/anomaly-primitives/anomaly_primitives/PyodCOF.py',
-        ],
+            'name': 'DATA Lab at Texas A&M University',
+            'contact': 'mailto:khlai037@tamu.edu',
         },
-        'algorithm_types': [
-            metadata_base.PrimitiveAlgorithmType.PYOD_COF,
-        ],
-        'primitive_family': metadata_base.PrimitiveFamily.ANOMALY_DETECTION,
-        'id': 'c7259da6-7ce6-42ad-83c6-15238679f5fa',
         'hyperparameters_to_tune':['rank','update','objective','max_iter','learning_rate'],
         'version': '0.0.1',
-    },
-    )
+        'algorithm_types': [
+            metadata_base.PrimitiveAlgorithmType.TODS_PRIMITIVE,
+        ],
+        'primitive_family': metadata_base.PrimitiveFamily.ANOMALY_DETECTION,
+	'id': str(uuid.uuid3(uuid.NAMESPACE_DNS, 'COFPrimitive')),
+    })
 
     def __init__(self, *,
                  hyperparams: Hyperparams, #
@@ -174,6 +167,20 @@ class PyodCOF(UnsupervisedOutlierDetectorBase[Inputs, Outputs, Params, Hyperpara
             1 marks Outliers, 0 marks normal.
         """
         return super().produce(inputs=inputs, timeout=timeout, iterations=iterations)
+
+
+
+    def produce_score(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> CallResult[Outputs]:
+        """
+        Process the testing data.
+        Args:
+            inputs: Container DataFrame. Time series data up to outlier detection.
+        Returns:
+            Container DataFrame
+            Outlier score of input DataFrame.
+        """
+        return super().produce_score(inputs=inputs, timeout=timeout, iterations=iterations)
+
 
     def get_params(self) -> Params:
         """
